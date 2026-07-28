@@ -1,0 +1,10 @@
+AI 코딩 도구 완전 가이드
+
+현직 개발자 → GitHub Copilot
+AI-first 개발 → Cursor
+복잡한 코딩 → Claude Code
+비개발자 앱 만들기 → Replit Agent
+
+코딩 몰라도 AI로 앱 만드는 시대입니다 🔖
+
+#AI코딩 #GitHub Copilot #Cursor #ClaudeCode #Replit #AI개발 #노코드 #코딩AI #개발자도구 #AI프로그래밍
