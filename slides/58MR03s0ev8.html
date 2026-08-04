@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AEO 완전 정복 — Learn 80% of AEO in 19 Minutes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#020203;--bg-base:#050506;--bg-elevated:#0a0a0c;
+  --surface:rgba(255 255 255/.04);--surface-hi:rgba(255 255 255/.07);
+  --fg:#EDEDEF;--fg-muted:#8A8F98;--border:rgba(255 255 255/.08);
+  --radius:16px;--ease:cubic-bezier(0.16,1,0.3,1);--dur:420ms;
+  font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
+}
+html,body{height:100%;background:linear-gradient(160deg,#0a0a0f 0%,var(--bg-deep) 100%);color:var(--fg);overflow:hidden}
+#pbar{position:fixed;top:0;left:0;height:2px;z-index:300;transition:width var(--dur) var(--ease),background .6s var(--ease);filter:blur(0.5px)}
+#pbar::after{content:'';position:absolute;inset:0;box-shadow:0 0 12px currentColor,0 0 4px currentColor;background:inherit}
+#dots{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;z-index:300;max-width:80vw;flex-wrap:wrap;justify-content:center}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255 255 255/.18);cursor:pointer;transition:transform .25s var(--ease),background .3s}
+.dot.active{transform:scale(1.7)}
+#deck{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:48px 64px 80px;opacity:0;pointer-events:none;transform:translateX(32px) scale(.985);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);will-change:opacity,transform}
+.slide.active{opacity:1;pointer-events:auto;transform:translateX(0) scale(1)}
+.slide.exit{opacity:0;transform:translateX(-32px) scale(.985);pointer-events:none}
+.blob{position:absolute;pointer-events:none;border-radius:50%;filter:blur(48px);will-change:transform}
+.blob-a{width:55vw;height:55vw;top:-10%;left:-15%;animation:drift-a 12s ease-in-out infinite}
+.blob-b{width:40vw;height:40vw;bottom:5%;right:-10%;animation:drift-b 16s ease-in-out infinite}
+@keyframes drift-a{0%,100%{transform:translate(0,0)}50%{transform:translate(6%,5%)}}
+@keyframes drift-b{0%,100%{transform:translate(0,0)}50%{transform:translate(-5%,-6%)}}
+.glass-card{position:relative;z-index:1;width:100%;max-width:960px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:52px 60px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255 255 255/.06) inset,0 32px 80px rgba(0 0 0/.6);background-image:linear-gradient(to bottom,rgba(255 255 255/.06) 0%,transparent 2px)}
+.s-inner{display:flex;flex-direction:column;gap:0}
+.s-tag-wrap{margin-bottom:18px}
+.s-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid;transition:background .3s,border-color .3s}
+.s-head{font-size:clamp(24px,3.8vw,52px);font-weight:800;line-height:1.15;letter-spacing:-.025em;color:var(--fg);margin-bottom:14px;text-wrap:balance}
+.sl-title .s-head{font-size:clamp(34px,5.5vw,68px);background:linear-gradient(140deg,#fff 40%,rgba(255,255,255,.45));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sl-trans .s-head{font-size:clamp(38px,6vw,74px);font-weight:900}
+.s-sub{font-size:clamp(13px,1.5vw,18px);color:var(--fg-muted);line-height:1.65;margin-bottom:24px;font-weight:400}
+.pts{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.pt{font-size:clamp(12.5px,1.3vw,16px);color:rgba(255 255 255/.72);line-height:1.6;padding:10px 15px;border-left:1.5px solid rgba(255 255 255/.1);background:rgba(255 255 255/.03);border-radius:0 8px 8px 0}
+.pt-first{color:var(--fg);font-weight:500;border-left-color:var(--pt-accent);background:rgba(255 255 255/.05)}
+.s-cap{margin-top:16px;padding-top:14px;font-size:11.5px;color:rgba(255 255 255/.28);border-top:1px solid var(--border);letter-spacing:.02em}
+.s-counter{position:absolute;bottom:24px;right:40px;z-index:2;font-size:11px;font-weight:600;color:rgba(255 255 255/.25);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.s-total{font-weight:400;color:rgba(255 255 255/.12)}
+#nav{position:fixed;top:50%;transform:translateY(-50%);width:100%;z-index:300;pointer-events:none;display:flex;justify-content:space-between;padding:0 12px}
+.nav-btn{pointer-events:auto;width:38px;height:38px;border-radius:50%;background:var(--surface-hi);border:1px solid var(--border);color:var(--fg-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;opacity:.35;transition:opacity .2s var(--ease),background .2s,transform .15s var(--ease)}
+.nav-btn:hover{background:rgba(255 255 255/.1);color:var(--fg);opacity:1}
+.nav-btn:active{transform:scale(.95)}
+#hint{position:fixed;top:16px;right:20px;z-index:300;display:flex;gap:5px;align-items:center;opacity:.4;transition:opacity .2s}
+#hint:hover{opacity:.9}
+.kbd{background:rgba(255 255 255/.06);border:1px solid var(--border);font-size:10px;font-family:monospace;padding:2px 6px;border-radius:4px;color:var(--fg-muted)}
+@media(prefers-reduced-motion:reduce){.slide{transition:opacity .15s}.blob{animation:none}}
+</style>
+</head>
+<body>
+<div id="pbar"></div>
+<div id="dots"></div>
+<div id="deck">
+<section class="slide sl-content" data-idx="0" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AI 어시스턴트는 왜 다를까?</h2>
+      <p class="s-sub">AI가 검색을 바꾸는 방식에 대한 핵심 질문</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">화자가 &#x27;AI assistants는 왜 이렇게 작동하는가?&#x27;라는 질문을 던지며 강의를 시작함</li><li class="pt " style="">전통 SEO와 AI 검색(AEO)의 근본적 차이를 설명하는 도입부</li></ul><footer class="s-cap">프레임 0001 — 텍스트 오버레이: &#x27;Why is it that AI assistants&#x27;</footer>
+    </div>
+  </div>
+  <div class="s-counter">1<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="1" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AEO 강좌 소개</h2>
+      <p class="s-sub">YouTube 채널에서 AEO 코스 영상 확인</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">YouTube 채널에 &#x27;AI SEO Course for Beginners: Complete AEO Tutorial&#x27; 영상이 게시됨</li><li class="pt " style="">조회수 14K, 6일 전 업로드</li><li class="pt " style="">AEO의 3단계 구조(1→2→3)를 썸네일에서 시각적으로 표현</li></ul><footer class="s-cap">프레임 0007 — YouTube 화면 녹화</footer>
+    </div>
+  </div>
+  <div class="s-counter">2<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="2" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">구글 검색에 AI 모드 등장</h2>
+      <p class="s-sub">AI Mode 버튼이 구글 검색창에 추가됨</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">구글 검색창에 &#x27;AI Mode&#x27; 버튼이 공식 추가됨</li><li class="pt " style="">사용자가 &#x27;how lo&#x27; 입력 시 자동완성에 다양한 &#x27;어떻게&#x27; 계열 쿼리 노출</li><li class="pt " style="">검색 패러다임이 키워드 매칭에서 AI 응답 방식으로 전환되고 있음</li></ul><footer class="s-cap">프레임 0016 — Google 검색 화면 녹화</footer>
+    </div>
+  </div>
+  <div class="s-counter">3<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="3" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AI는 1개 질문으로 5개 검색을 한다</h2>
+      <p class="s-sub">AI 어시스턴트의 멀티 쿼리 검색 방식</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">사용자 입력: &#x27;11월 일본 5일 여행 계획 짜줘&#x27; (Plan me a 5-day trip to Japan in November)</li><li class="pt " style="">AI가 자동으로 파생 검색어를 생성하며 정보를 수집:</li><li class="pt " style="">— 도쿄 최고의 숙박 동네 (best neighborhoods to stay in Tokyo)</li><li class="pt " style="">— 일본 레일패스 가성비 여부 (Japan rail pass worth it)</li><li class="pt " style="">— 교토 11월 날씨 (November weather in Kyoto)</li><li class="pt " style="">— 도쿄 근교 당일치기 (day trips from Tokyo)</li><li class="pt " style="">— 오사카 맛집 (top restaurants in Osaka)</li><li class="pt " style="">전통 검색은 1쿼리 = 1결과. AI 검색은 1쿼리 = 다수 파생 검색</li></ul><footer class="s-cap">프레임 0019~0025 — 파란 배경 애니메이션 슬라이드 시퀀스</footer>
+    </div>
+  </div>
+  <div class="s-counter">4<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="4" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">ChatGPT Deep Research = 420회 검색</h2>
+      <p class="s-sub">단 하나의 사용자 질문이 수백 번의 검색을 유발</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">ChatGPT Deep Research가 &#x27;호주에서 빨간 폰 케이스 구매&#x27; 단일 쿼리에 420번 검색 수행</li><li class="pt " style="">15분 내 완료, 30개 인용 출처 생성</li><li class="pt " style="">AI 검색이 전통 검색보다 훨씬 많은 웹 콘텐츠를 소비함을 시사</li></ul><footer class="s-cap">프레임 0031 — 웹 아티클 화면 녹화 (출처: 웹 연구 보고서)</footer>
+    </div>
+  </div>
+  <div class="s-counter">5<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="5" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AI 가시성 패턴 3가지</h2>
+      <p class="s-sub">AI가 콘텐츠를 인용하는 3가지 핵심 원리</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">1/ 합의 (Consensus) — 여러 소스에서 동일하게 언급될수록 AI가 인용할 확률 증가</li><li class="pt " style="">2/ [항목 로딩 중 — 다음 섹션에서 공개]</li><li class="pt " style="">3/ [항목 로딩 중 — 다음 섹션에서 공개]</li></ul><footer class="s-cap">프레임 0040~0043 — 파란 그라디언트 슬라이드. 항목 2·3은 블러 처리되어 점진적으로 공개되는 구조</footer>
+    </div>
+  </div>
+  <div class="s-counter">6<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="6" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AI는 오래된 콘텐츠보다 최신 콘텐츠를 선호</h2>
+      <p class="s-sub">AI 인용 URL은 오가닉 검색보다 25.7% 더 최신</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">ChatGPT·Perplexity·Copilot·Gemini의 인용 URL 평균 게시 후 경과일: 1,064일 (2.9년)</li><li class="pt " style="">오가닉 SERP의 인용 URL 평균: 1,432일 (3.9년)</li><li class="pt " style="">AI 어시스턴트가 오가닉 검색보다 25.7% 더 최신 콘텐츠를 인용</li><li class="pt " style="">1,700만 개 인용 데이터 분석 결과</li></ul><footer class="s-cap">프레임 0046 — 웹 아티클 차트 화면 녹화. 출처: 인용 콘텐츠 연령 분석 연구</footer>
+    </div>
+  </div>
+  <div class="s-counter">7<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="7" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AI 개요 인용 = 상위 10위 사이트가 76%</h2>
+      <p class="s-sub">Ahrefs의 190만 건 AI Overview 인용 분석</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">76.1% — 구글 상위 10위 (Top 10) 페이지가 AI 개요에 인용됨</li><li class="pt " style="">9.5% — 순위 11~100위 페이지가 인용됨</li><li class="pt " style="">14.4% — 상위 100위 안에 없는 페이지도 인용됨</li><li class="pt " style="">즉, 전통 SEO 순위가 높을수록 AI 인용 가능성도 높지만, 순위 밖 콘텐츠도 인용 기회가 있음</li></ul><footer class="s-cap">프레임 0049 — 파이 차트. 출처: ahrefs.com/blog/search-rankings-ai-citations/</footer>
+    </div>
+  </div>
+  <div class="s-counter">8<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="8" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">AEO가 실제로 작동하는 3개 채널</h2>
+      <p class="s-sub">AI가 브랜드를 인용하는 경로</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">구글 (Google) — 검색 결과 및 스니펫 (Search results &amp; snippets)</li><li class="pt " style="">AI 결과 (AI Results) — ChatGPT, Gemini, Perplexity 등에서의 직접 언급</li><li class="pt " style="">웹 전체 (The Web) — 멘션, 리뷰, 인용 (Mentions, reviews, citations)</li><li class="pt " style="">세 채널 모두에서 점(dot)으로 표현된 노출 빈도가 다름 — 채널별 전략 차별화 필요</li></ul><footer class="s-cap">프레임 0058 — 파란 배경 다이어그램 슬라이드: &#x27;Where it actually does&#x27;</footer>
+    </div>
+  </div>
+  <div class="s-counter">9<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="9" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">Ahrefs Brand Radar로 AI 언급 추적</h2>
+      <p class="s-sub">브랜드가 AI 및 웹에서 어떻게 언급되는지 탐색</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">Ahrefs Brand Radar 2.0 도구 소개</li><li class="pt " style="">자신의 브랜드와 경쟁사(Majestic, Moz, SE Ranking, Semrush, Similarweb 등)를 등록</li><li class="pt " style="">AI 응답과 웹 전반에서 브랜드 언급을 탐색·추적 가능</li><li class="pt " style="">Explore 또는 Track custom prompts 옵션 선택 가능</li></ul><footer class="s-cap">프레임 0061 — Ahrefs Brand Radar 2.0 화면 녹화</footer>
+    </div>
+  </div>
+  <div class="s-counter">10<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="10" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">Ahrefs AI Responses로 언급 현황 분석</h2>
+      <p class="s-sub">구글 AI Overview에서 브랜드가 언급되는 쿼리 파악</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">Ahrefs &#x27;AI responses&#x27; 메뉴에서 브랜드가 언급된 쿼리 목록 확인</li><li class="pt " style="">필터: 미국, AI Overviews, &#x27;브랜드 언급되었으나 인용 링크 없음&#x27; 조건으로 6,045개 결과 확인</li><li class="pt " style="">주요 쿼리 예시: &#x27;seo tools&#x27;(월 303K), &#x27;best seo tool&#x27;(51K), &#x27;seo software&#x27;(11K)</li><li class="pt " style="">사이드바에서 AI visibility / Video visibility / SERP visibility / Web visibility 통합 관리 가능</li><li class="pt " style="">브랜드가 어떤 쿼리에서 언급되는지 파악하고 콘텐츠 전략에 반영해야 함</li></ul><footer class="s-cap">프레임 0067~0070 — Ahrefs AI responses 화면 녹화 (2026년 4월 23일 기준 데이터)</footer>
+    </div>
+  </div>
+  <div class="s-counter">11<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="11" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">AI는 사용자 맥락을 이해한다</h2>
+      <p class="s-sub">검색 의도를 명시할수록 더 정확한 답변 도출</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">&quot;저는 마케팅 플랫폼을 찾는 소규모 에이전시 오너입니다.&quot;</li></ul><footer class="s-cap">AI 검색은 단순 키워드가 아닌 사용자 맥락 전체를 처리함</footer>
+    </div>
+  </div>
+  <div class="s-counter">12<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="12" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">시드 키워드와 수식어 조합</h2>
+      <p class="s-sub">키워드 리서치의 두 가지 핵심 요소</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">시드 키워드(Seed Keywords): 니치와 관련된 광범위한 용어. 예: coffee, espresso</li><li class="pt " style="">수식어(Modifiers): 기본 키워드에 붙이는 부가어. 예: best, how-to</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">13<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="13" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">ChatGPT로 키워드 리서치 시작</h2>
+      <p class="s-sub">맥락을 담은 프롬프트 작성 시연</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">ChatGPT에 업종·타겟·수익 방식을 포함한 구체적 프롬프트 입력</li><li class="pt " style="">프롬프트 예: &#x27;커피 기어 이커머스 사이트, 홈 바리스타 타겟, 시드 키워드 10개 + 수식어 5개 이상 요청&#x27;</li></ul><footer class="s-cap">씨드와 수식어는 서로 동일한 단어를 포함하지 않아야 함</footer>
+    </div>
+  </div>
+  <div class="s-counter">14<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="14" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">Ahrefs Keywords Explorer 활용</h2>
+      <p class="s-sub">AI가 제안한 시드 키워드를 툴에 입력</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">espresso machine, coffee grinder, french press, moka pot, pour over</li><li class="pt " style="">milk frother, coffee beans, cold brew, burr grinder, espresso tamper</li><li class="pt " style="">키워드 목록을 Ahrefs Keywords Explorer에 붙여넣고 Search 클릭</li></ul><footer class="s-cap">ChatGPT 제안 키워드 → Ahrefs로 검색량·난이도 검증</footer>
+    </div>
+  </div>
+  <div class="s-counter">15<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-trans" data-idx="15" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">AI 필터(The AI Filter)</h2>
+      <p class="s-sub">AI 검색이 콘텐츠를 거르는 방식</p>
+    </div>
+  </div>
+  <div class="s-counter">16<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="16" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">질문형 키워드에서 AIO 출현율 압도적</h2>
+      <p class="s-sub">쿼리 유형별 AIO 포함 SERP 비율</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">질문형(Question) 키워드: 57.9%에서 AI 개요(AIO) 노출</li><li class="pt " style="">비질문형(Not question) 키워드: 15.5%에서 AIO 노출</li></ul><footer class="s-cap">1억 4,600만 건 SERP 분석 기준 (Ahrefs 연구)</footer>
+    </div>
+  </div>
+  <div class="s-counter">17<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="17" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">정보형 키워드가 AIO 압도적 지배</h2>
+      <p class="s-sub">키워드 의도별 AI Overview 출현 비율</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">정보형(Informational): 99.9% — 거의 모든 정보형 쿼리에 AIO 등장</li><li class="pt " style="">내비게이셔널(Navigational): 0.1%</li><li class="pt " style="">상업적(Commercial): 5.5%</li><li class="pt " style="">거래형(Transactional): 1.2%</li></ul><footer class="s-cap">1억 4,600만 건 SERP 분석 기준 — 정보형 콘텐츠가 AEO의 핵심 전장</footer>
+    </div>
+  </div>
+  <div class="s-counter">18<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="18" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">SEO vs AEO: 목표의 차이</h2>
+      <p class="s-sub">SEO는 클릭을 얻는 것, AEO는 인용되는 것</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">SEO 목표: 순위 상승 후 클릭 획득 (Rank and earn a click)</li><li class="pt " style="">예시: &#x27;Espresso machine buyer&#x27;s guide&#x27; — 자신의 브랜드 사이트가 검색 결과에 노출</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">19<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="19" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">Ahrefs Brand Radar 2.0 활용</h2>
+      <p class="s-sub">AI 검색에서 브랜드 언급 현황 파악</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">브랜드와 경쟁사를 입력해 AI가 어떻게 언급하는지 비교 분석</li><li class="pt " style="">예: Nike vs Adidas, Puma, Under Armour, New Balance, Reebok</li></ul><footer class="s-cap">Ahrefs Brand Radar 2.0 — 브랜드·경쟁사·도메인 단위 추적 가능</footer>
+    </div>
+  </div>
+  <div class="s-counter">20<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="20" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">Brand Radar 필터: 경쟁사 언급 추적</h2>
+      <p class="s-sub">프롬프트·응답에 경쟁사명 포함 여부 필터링</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">Prompt Contains + Response Contains 조건으로 경쟁사 언급 필터</li><li class="pt " style="">Adidas, Puma, Under Armour, New Balance, Reebok 동시 추적</li><li class="pt " style="">40,691건 결과 분석 가능</li></ul><footer class="s-cap">AI가 경쟁사를 인용하는 프롬프트 패턴을 파악해 콘텐츠 전략에 활용</footer>
+    </div>
+  </div>
+  <div class="s-counter">21<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="21" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">AEO 5단계 실행 프레임워크</h2>
+      <p class="s-sub">AI 검색 최적화를 위한 단계별 접근</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">1. AI 검색 작동 원리 이해</li><li class="pt " style="">2. 브랜드 갭 분석 (Brand gap analysis)</li><li class="pt " style="">3. 키워드 및 프롬프트 리서치</li><li class="pt " style="">4. (다음 단계 — 공개 예정)</li><li class="pt " style="">5. (다음 단계 — 공개 예정)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">22<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="22" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">AI 검색에서 인용되는 4가지 요소</h2>
+      <p class="s-sub">Citations in AI search</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">1/ 나의 콘텐츠 (Your content)</li><li class="pt " style="">2/ 나에 대한 언급 (Your mentions)</li><li class="pt " style="">3/ YouTube 채널 존재감 (Your YouTube presence)</li><li class="pt " style="">4/ (추가 항목 — 영상에서 공개 예정)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">23<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="23" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">글 길이보다 콘텐츠 신선도가 중요</h2>
+      <p class="s-sub">Ahrefs 17만 4천 페이지 분석 결과</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">AI Overview 인용 페이지와 글자 수 사이에 상관관계 거의 없음</li><li class="pt " style="">10,000단어 가이드가 인용되는 이유는 길이가 아니라 &#x27;신선한 콘텐츠&#x27;로 인식되기 때문</li><li class="pt " style="">결론: 인간 독자에게 간결하게 전달하는 것이 최선 — 불필요한 내용 제거, 임의적 단어 수 목표 금지</li></ul><footer class="s-cap">Ahrefs 연구: 174,000개 AIO 인용 페이지 분석</footer>
+    </div>
+  </div>
+  <div class="s-counter">24<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-trans" data-idx="24" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">TIP 2: 신선도가 매우 중요하다</h2>
+      <p class="s-sub">2/ Freshness matters a lot</p>
+    </div>
+  </div>
+  <div class="s-counter">25<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="25" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">ChatGPT 인용 콘텐츠의 최신성 편향</h2>
+      <p class="s-sub">최근 30일 이내 업데이트 콘텐츠가 압도적으로 많이 인용됨</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">30일 이내 업데이트: 76.4%</li><li class="pt " style="">1~6개월 이내: 11%</li><li class="pt " style="">6~12개월 이내: 3.7%</li><li class="pt " style="">1년 초과: 8.9%</li></ul><footer class="s-cap">출처: Ahrefs 연구 — 564개 URL 날짜 분석 기준. URL_freshness_score 존재 확인, 날짜 갱신 시 AI 순위 최대 95계단 상승 가능</footer>
+    </div>
+  </div>
+  <div class="s-counter">26<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="26" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">AI가 자주 인용하는 콘텐츠 유형</h2>
+      <p class="s-sub">Best X / Top X 형식의 리스트 콘텐츠가 AI 인용에 유리</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">BEST X 유형: &#x27;2026년 소규모 비즈니스를 위한 최고의 CRM 소프트웨어&#x27; (techradar.com)</li><li class="pt " style="">TOP X 유형: &#x27;상위 10개 프로젝트 관리 툴 순위&#x27; (forbes.com)</li></ul><footer class="s-cap">비교·순위형 콘텐츠는 AI 검색엔진이 답변 소스로 선호</footer>
+    </div>
+  </div>
+  <div class="s-counter">27<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="27" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">콘텐츠 거시 전략 3원칙</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">콘텐츠를 집중적으로 유지하라 (Keep your content focused)</li><li class="pt " style="">콘텐츠를 항상 최신 상태로 유지하라 (Keep your content fresh)</li><li class="pt " style="">AI가 실제로 활용할 수 있는 형식을 사용하라 (Use formats AI can actually use)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">28<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="28" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">콘텐츠 4대 원칙 — BLUF</h2>
+      <p class="s-sub">원칙 1: BLUF (Bottom Line Up Front) — 결론을 첫 문장에 배치</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">나쁜 예 (BLUF 없음): &#x27;지난 몇 년간 링크 빌딩 전략은 검색엔진 변화로 크게 진화했습니다...&#x27; (두괄식 아님)</li><li class="pt " style="">좋은 예 (BLUF 적용): &#x27;2026년 백링크 구축의 가장 효과적인 방법은 독창적 연구를 만드는 것이다.&#x27;</li></ul><footer class="s-cap">AI는 첫 문장에서 답을 찾기 때문에 핵심 주장을 서두에 배치해야 인용 가능성이 높아진다</footer>
+    </div>
+  </div>
+  <div class="s-counter">29<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="29" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">청크 구조로 정보를 분리하라</h2>
+      <p class="s-sub">AI가 발췌하기 쉬운 청크(Chunk) 형태로 콘텐츠 구성</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">CHUNK 1 — 백링크 구축 방법: 독창적 연구가 2026년 가장 효과적</li><li class="pt " style="">CHUNK 2 — 독창적 연구가 효과적인 이유: 기자·블로거에게 인용 가능한 1차 출처 제공</li><li class="pt " style="">CHUNK 3 — 연구 설계 방법: 청중 관심 주제 선정 + 명확한 방법론 + 공유 가능한 차트 2~3개</li><li class="pt " style="">CHUNK 4 — 홍보 방법: 기자 피칭, LinkedIn 차트 공유, Reddit에서 인용 답변 달기</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">30<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="30" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">Ahrefs Web Explorer 소개</h2>
+      <p class="s-sub">Yep 검색엔진 기반 500억 페이지 인덱스 — Content Explorer 대비 36배 규모</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">모든 페이지·도메인·링크를 SEO 지표로 필터링 가능</li><li class="pt " style="">활용 사례: 언링크드 브랜드 멘션 발굴 (언급은 됐지만 링크 없는 페이지 찾기)</li><li class="pt " style="">브랜드가 언급된 페이지에 링크 요청 → 백링크 획득</li></ul><footer class="s-cap">Ahrefs Web Explorer 화면 — 기사 내 Web Explorer 섹션</footer>
+    </div>
+  </div>
+  <div class="s-counter">31<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="31" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">엔티티(Entity) 풍부한 문장으로 작성하라</h2>
+      <p class="s-sub">콘텐츠 4대 원칙 중 하나: 구체적 도구명·브랜드명을 명시</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">나쁜 예 (모호): &#x27;이 도구는 SEO에 도움이 됩니다&#x27;</li><li class="pt " style="">좋은 예 (엔티티 풍부): &#x27;Ahrefs의 키워드 익스플로러는 난이도가 낮고 트래픽이 높은 키워드를 찾아줍니다&#x27;</li></ul><footer class="s-cap">AI는 고유명사·브랜드명 등 엔티티가 명확한 문장을 더 신뢰하고 인용</footer>
+    </div>
+  </div>
+  <div class="s-counter">32<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="32" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">AI 인용과 상관관계 높은 요소 (데이터)</h2>
+      <p class="s-sub">ChatGPT·AI Mode·AI Overviews 3개 AI 기준 상관계수 분석</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">유튜브 언급 횟수: 0.735~0.740 (최상위 — 동영상 브랜드 노출이 핵심)</li><li class="pt " style="">유튜브 언급 노출 수: 0.712~0.721</li><li class="pt " style="">브랜드 웹 멘션: 0.656~0.709</li><li class="pt " style="">브랜드 앵커 텍스트: 0.511~0.628</li><li class="pt " style="">브랜드 검색량: 0.352~0.466</li><li class="pt " style="">DR(도메인 레이팅): 0.266~0.326 (기존 SEO 지표보다 브랜드 신호가 더 중요)</li></ul><footer class="s-cap">브랜드 멘션·유튜브 노출이 전통적 SEO 지표보다 AI 인용에 훨씬 강한 상관관계</footer>
+    </div>
+  </div>
+  <div class="s-counter">33<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="33" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">2티어: 제3자 에디토리얼 콘텐츠</h2>
+      <p class="s-sub">외부 권위 있는 미디어에서의 브랜드 언급 확보</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">업계 전문 미디어 (Industry publications)</li><li class="pt " style="">리뷰 사이트 — Wirecutter, TechRadar 등</li><li class="pt " style="">리스티클 &amp; 비교 포스트 (Best X, Top X 형식)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">34<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="34" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">UGC 및 커뮤니티 콘텐츠</h2>
+      <p class="s-sub">실사용자 생성 콘텐츠 플랫폼에서의 언급 확보</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">Reddit — 서브레딧 내 자연스러운 언급·추천</li><li class="pt " style="">Quora — 질의응답 형태의 브랜드 언급</li><li class="pt " style="">틈새 전문 포럼 (Niche forums)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">35<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="35" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">Web Explorer로 Reddit 멘션 탐색</h2>
+      <p class="s-sub">Ahrefs Web Explorer에서 키워드별 Reddit 언급 게시글 확인</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">키워드 검색 시 관련 Reddit 토론 게시글·댓글 목록 확인</li><li class="pt " style="">SEO 툴 관련 실사용자 대화 데이터 수집 가능 (ahrefs, semrush 등)</li><li class="pt " style="">경쟁사 대비 브랜드 멘션 현황 파악 및 참여 기회 발굴</li></ul><footer class="s-cap">Ahrefs Web Explorer — Reddit 내 SEO 툴 관련 게시글 검색 결과</footer>
+    </div>
+  </div>
+  <div class="s-counter">36<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="36" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">3티어: 자사 채널에서의 브랜드 언급</h2>
+      <p class="s-sub">직접 소유한 채널에서 브랜드 노출 극대화</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">자사 웹사이트·블로그·소셜미디어 등 직접 소유 채널 활용</li><li class="pt " style="">자사 콘텐츠에서 일관된 브랜드 언급으로 AI 학습 데이터 확보</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">37<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="37" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">AI 학습 예시 많을수록 인용 확률 상승</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">AI가 학습할 사례가 많으면 많을수록, 해당 브랜드가 AI 검색 결과에 인용될 가능성이 높아진다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">38<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="38" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">유튜브 언급이 AI 가시성 상관관계 1위</h2>
+      <p class="s-sub">Ahrefs 연구 핵심 인사이트 (Key Takeaways)</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">YouTube 언급 → AI 가시성 상관계수 ~0.737 (ChatGPT·AI Mode·AI Overviews 전체 1위)</li><li class="pt " style="">YouTube 언급 횟수 vs 언급 노출수: 0.737 vs 0.717 (횟수가 근소하게 더 강함)</li><li class="pt " style="">브랜드 웹 언급도 AI 가시성과 높은 상관관계: 0.66~0.71</li><li class="pt " style="">콘텐츠 양(사이트 페이지 수)은 AI 가시성과 거의 무관 (~0.194)</li><li class="pt " style="">ChatGPT는 DR·브랜드 검색량 등 전통 SEO 권위 지표와의 상관이 약함</li></ul><footer class="s-cap">출처: Ahrefs 연구 아티클</footer>
+    </div>
+  </div>
+  <div class="s-counter">39<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="39" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">Ahrefs 유튜브 채널: AI 가시성 확보 사례</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">Ahrefs YouTube 채널 (@AhrefsCom): 구독자 668K, 영상 390개</li><li class="pt " style="">SEO·AEO 튜토리얼 콘텐츠로 브랜드 언급량 극대화</li><li class="pt " style="">YouTube 콘텐츠가 AI 학습 데이터로 활용되어 AI 인용 빈도 증가</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">40<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="40" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">MrBeast: 바이럴 유튜브의 압도적 규모</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">MrBeast (@MrBeast): 구독자 503M, 영상 987개</li><li class="pt " style="">AI가 학습할 수 있는 콘텐츠 데이터 규모가 압도적으로 큼</li><li class="pt " style="">대규모 YouTube 존재감이 곧 AI 학습 데이터량으로 직결</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">41<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="41" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">바이럴 vs 검색: 트래픽 곡선 비교</h2>
+      <p class="s-sub">시간에 따른 트래픽 패턴 (Traffic over time)</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">바이럴 콘텐츠(흰색 곡선): 초반 폭발적 급상승 후 급격히 소멸하는 역U자형</li><li class="pt " style="">검색 콘텐츠(초록 곡선): 천천히 성장하지만 장기간 지속되는 우상향 곡선</li><li class="pt " style="">두 전략을 병행하면 AI 학습 데이터 공급을 단기·장기 모두 극대화할 수 있다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">42<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="42" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">Google AI Overview에 YouTube 영상 직접 인용</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">&#x27;answer engine optimization&#x27; 검색 시 Google AI Overview가 Ahrefs YouTube 영상을 상단에 인용</li><li class="pt " style="">AEO 콘텐츠를 YouTube에 올리면 AI 검색 결과에 직접 노출될 수 있음</li><li class="pt " style="">YouTube는 AI 학습 데이터이자 AI 검색 결과 인용 채널로 이중 효과 발휘</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">43<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="43" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">Ahrefs로 YouTube 영상 검색 트래픽 분석</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">Site Explorer에 YouTube 영상 URL 입력 → 유기적 검색 트래픽·키워드 확인 가능</li><li class="pt " style="">골프 키워드 예시: &#x27;golf swing&#x27; 14K 검색량(2위), &#x27;how to hold a golf club&#x27; 8.1K(1위)</li><li class="pt " style="">KD 0~3의 저경쟁 키워드로도 수천 건의 검색 트래픽 확보 가능</li><li class="pt " style="">YouTube 영상이 구글 검색에서도 상위 노출되어 이중 트래픽 확보</li></ul><footer class="s-cap">Ahrefs Site Explorer → Organic Keywords 필터 활용</footer>
+    </div>
+  </div>
+  <div class="s-counter">44<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="44" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">유튜브 랭킹 체크리스트</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">1. 제목과 설명에 타겟 키워드를 반드시 포함할 것</li><li class="pt " style="">2. YouTube 챕터(Chapter) 생성을 위한 타임스탬프 추가</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">45<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="45" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">AI 봇 크롤러 접근 차단 여부 점검</h2>
+      <p class="s-sub">Ahrefs Site Audit: robots.txt 크롤링 차단 이슈</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">robots.txt 규칙으로 크롤링이 차단된 URL이 있는지 Ahrefs로 확인</li><li class="pt " style="">AI 봇이 사이트를 크롤링할 수 없으면 AI 학습 데이터로 활용되지 않음</li><li class="pt " style="">차단된 URL이 0건이면 정상 — AI 봇 접근이 허용된 상태</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">46<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="46" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">주요 AI 봇 크롤러 현황 데이터</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">GPTBot (OpenAI): 8,245,987건 크롤링 — 5.89%</li><li class="pt " style="">CCBot (Common Crawl): 8,188,656건 — 5.85%</li><li class="pt " style="">Amazonbot (Amazon): 8,082,636건 — 5.78%</li><li class="pt " style="">Bytespider (ByteDance): 8,024,980건 — 5.74%</li><li class="pt " style="">ClaudeBot (Anthropic): 8,023,055건 — 5.74%</li><li class="pt " style="">Google-Extended (Google): 7,989,344건 — 5.71%</li></ul><footer class="s-cap">AI 봇들이 사이트를 크롤링해야 AI 모델 학습 데이터로 활용됨</footer>
+    </div>
+  </div>
+  <div class="s-counter">47<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="47" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">Cloudflare: AI 봇 트래픽 기본 차단 주의</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">Cloudflare 보안 설정 &#x27;Bot traffic filter&#x27; → AI 봇 트래픽 robots.txt 제어 기능 기본 활성화</li><li class="pt " style="">이 기능이 켜져 있으면 콘텐츠가 AI 학습에 사용되지 않도록 자동 차단됨</li><li class="pt " style="">AEO를 위해서는 해당 설정을 비활성화하거나 GPTBot 등 주요 봇을 허용해야 함</li><li class="pt " style="">Cloudflare 이용 사이트는 반드시 이 설정 상태를 점검할 것</li></ul><footer class="s-cap">Cloudflare Security Settings &gt; Bot traffic filter &gt; &#x27;Instruct AI bot traffic with robots.txt&#x27;</footer>
+    </div>
+  </div>
+  <div class="s-counter">48<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="48" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">GPTBot 허용: robots.txt 설정 핵심</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">GPTBot은 OpenAI(ChatGPT)의 학습 데이터 수집 봇</li><li class="pt " style="">robots.txt에서 GPTBot이 차단되어 있으면 ChatGPT가 해당 사이트를 학습하지 못함</li><li class="pt " style="">ClaudeBot(Anthropic), Bytespider(ByteDance) 등 주요 AI 봇도 동일하게 확인 필요</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">49<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-trans" data-idx="49" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">AEO 핵심 강의 목차 (1~5)</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">1. AI 검색 작동 원리 (How AI search works)</li><li class="pt " style="">2. 브랜드 갭 분석 (Brand gap analysis)</li><li class="pt " style="">3. 키워드 및 프롬프트 리서치 (Keyword and prompt research)</li><li class="pt " style="">4. 인용되는 법 (Getting cited)</li><li class="pt " style="">5. (다음 섹션)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">50<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="50" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">Google Search Console: 검색 트래픽 모니터링</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">총 노출수 29.2M, 평균 CTR 0.6%, 평균 순위 9위</li><li class="pt " style="">클릭·노출 추이 그래프로 검색 트래픽 변화 추적</li><li class="pt " style="">YouTube 콘텐츠의 구글 검색 트래픽 성과도 GSC에서 확인 가능</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">51<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="51" data-color="#EC4899" data-rgb="236,72,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4</span></div>
+      <h2 class="s-head">두 가지 트래픽 전략을 동시에 운영하라</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">전략 1: 바이럴 콘텐츠 — 단기간 대량 노출로 AI 학습 데이터 급속 공급</li><li class="pt " style="">전략 2: 검색 최적화(SEO) 콘텐츠 — 장기 지속 트래픽으로 안정적 데이터 누적</li><li class="pt " style="">두 전략을 병행해야 AI가 브랜드를 학습할 기회를 최대화할 수 있다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">52<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="52" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AEO 학습 소스 목록</h2>
+      <p class="s-sub">링크 빌딩, 콘텐츠 전략, 데이터 연구 전문 블로그</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">Google for Developers — 크롤링/인덱싱 공식 가이드라인 (1차 소스)</li><li class="pt " style="">Ahrefs 블로그 — 링크 빌딩·콘텐츠 전략·데이터 기반 연구 (품질은 저자별 차이 있음)</li><li class="pt " style="">Search Engine Land — AI 검색·PPC·SEO 업데이트 및 튜토리얼</li></ul><footer class="s-cap">Ahrefs 블로그 링크 미리보기 표시 중</footer>
+    </div>
+  </div>
+  <div class="s-counter">53<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="53" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI 플랫폼별 레퍼러 지원 현황</h2>
+      <p class="s-sub">ChatGPT의 경우</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">✅ 출처 링크 및 검색 결과 — 레퍼러 전달됨</li><li class="pt " style="">❌ 유료 계정 내 콘텐츠 링크 — noreferrer 처리 (레퍼러 미전달)</li></ul><footer class="s-cap">AI 플랫폼마다 레퍼러 전달 방식이 다르므로 플랫폼별 확인 필수</footer>
+    </div>
+  </div>
+  <div class="s-counter">54<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="54" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">GA4 채널 그룹 설정 화면</h2>
+      <p class="s-sub">AI 유입을 별도 채널로 분류하는 설정 방법</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">채널 그룹 이름: Copy of Default Channel Group</li><li class="pt " style="">기본 채널 목록: Direct, Cross-network, Paid Shopping, Paid Search, Paid Social, Paid Video, Paid Other, Display</li><li class="pt " style="">&#x27;Add new channel&#x27; 버튼으로 AI 전용 채널 추가 가능</li></ul><footer class="s-cap">Google Analytics 4 — Reports &gt; Acquisition &gt; Traffic acquisition 설정</footer>
+    </div>
+  </div>
+  <div class="s-counter">55<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-trans" data-idx="55" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">2. AI 봇 활동 추적</h2>
+      
+    </div>
+  </div>
+  <div class="s-counter">56<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="56" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI 봇이 집중 크롤링하는 페이지</h2>
+      <p class="s-sub">사이트 구조 중 AI 봇이 선호하는 섹션</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">AI 봇은 /about (회사 소개) 페이지를 우선 크롤링</li><li class="pt " style="">AI 봇은 /blog/ (블로그) 섹션을 집중 탐색</li><li class="pt " style="">/blog/aeo-tips, /blog/seo-guide 등 콘텐츠 페이지가 주요 대상</li><li class="pt " style="">/products, /contact는 상대적으로 낮은 우선순위</li></ul><footer class="s-cap">AI 봇(로봇 아이콘)이 example.com 사이트 트리를 탐색하는 도식</footer>
+    </div>
+  </div>
+  <div class="s-counter">57<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="57" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">Ahrefs 봇 트래커 — 크롤링 현황</h2>
+      <p class="s-sub">내 사이트를 크롤링하는 AI 봇 식별 및 차단 도구</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">Total: 33M 크롤링 요청</li><li class="pt " style="">Ahrefs Site Audit (Monitoring): 17.4M</li><li class="pt " style="">Claude-User (AI Assistant): 10.8M</li><li class="pt " style="">Lighthouse (Monitoring): 6.4M</li><li class="pt " style="">Google Apps Script: 2.5M</li><li class="pt " style="">나쁜 봇은 차단, 원하는 AI 봇은 허용 설정 가능</li></ul><footer class="s-cap">Ahrefs Bot Tracker — &#x27;Sign up for Ahrefs&#x27; (유료 플랜 기능, 베타)</footer>
+    </div>
+  </div>
+  <div class="s-counter">58<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="58" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">ChatGPT 레퍼러 유입 추적 구조</h2>
+      <p class="s-sub">ChatGPT 창에서 내 사이트로 연결되는 흐름</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">ChatGPT가 출처 링크 형태로 내 사이트 URL을 제공</li><li class="pt " style="">사용자가 클릭 시 GA4에 &#x27;chatgpt.com / referral&#x27;로 기록됨</li><li class="pt " style="">유료 계정 내 인라인 링크는 noreferrer로 처리되어 &#x27;직접 유입&#x27;으로 잡힘</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">59<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="59" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">GA4 트래픽 획득 보고서 예시</h2>
+      <p class="s-sub">AI 플랫폼 유입이 별도 소스로 집계된 실제 화면</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">google / organic — Organic Search: 12,408명 (최다)</li><li class="pt " style="">(direct) / (none) — Direct: 3,217명</li><li class="pt " style="">claude.ai / referral — Referral: 412명 (AI 유입 별도 확인 가능)</li></ul><footer class="s-cap">GA4: Reports &gt; Acquisition &gt; Traffic acquisition</footer>
+    </div>
+  </div>
+  <div class="s-counter">60<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="60" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI 검색 트래픽 전환율이 23배 높다</h2>
+      <p class="s-sub">Ahrefs 자체 데이터 연구 결과</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">Ahrefs 전체 방문자 중 AI 검색 유입 비율: 0.5%</li><li class="pt " style="">그 0.5%가 전체 가입(Signup)의 12.1%를 차지</li><li class="pt " style="">AI 검색 방문자의 전환율이 일반 유기 검색 방문자보다 23배 높음</li><li class="pt " style="">AI 검색 = ChatGPT, Copilot, Gemini 등 AI 어시스턴트 유입 정의</li></ul><footer class="s-cap">출처: Ahrefs Blog — &#x27;Does AI Search Traffic Convert Better Than Traditional Search?&#x27; (Patrick Stox, 2025년 6월 16일)</footer>
+    </div>
+  </div>
+  <div class="s-counter">61<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="61" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AEO/AI SEO 전체 구조 요약</h2>
+      <p class="s-sub">SEO 기반 위에 AEO·AI SEO 4개 축이 작동</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">콘텐츠(Content) — AI 답변에 인용되는 고품질 콘텐츠 작성</li><li class="pt " style="">언급(Mentions) — 외부 사이트·커뮤니티에서 브랜드 언급 확대</li><li class="pt " style="">YouTube — 영상 콘텐츠로 AI 플랫폼 노출 다변화</li><li class="pt " style="">기술 설정(Technical Setup) — 구조화 데이터·크롤링 최적화</li><li class="pt " style="">이 4가지는 모두 SEO 기초 위에서 작동</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">62<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="62" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">가입 경로 설문으로 AI 유입 측정</h2>
+      <p class="s-sub">회원가입 폼에 AI 어시스턴트 항목 추가 방법</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">설문 옵션: Google 검색 / 지인 추천 / 소셜 미디어</li><li class="pt " style="">AI 어시스턴트 (ChatGPT, Perplexity 등) — 선택됨</li><li class="pt " style="">AI 검색 (Google AI Overview)</li><li class="pt " style="">기타</li><li class="pt " style="">GA4 레퍼러 데이터와 설문 데이터를 교차 검증해 AI 유입 정확도 향상</li></ul><footer class="s-cap">Sign-up Step 2 of 3 — 출처 파악용 설문 예시</footer>
+    </div>
+  </div>
+  <div class="s-counter">63<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="63" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">Ahrefs — 낮은 URL Rating 페이지 분석</h2>
+      <p class="s-sub">DR 높아도 URL Rating·트래픽 낮으면 AI 인용 가능성 낮음</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">Google Sites 기반 페이지 다수: DR 99이지만 URL Rating 4~7에 불과</li><li class="pt " style="">Ref. domains 2~28개 수준, Page traffic &lt; 1 ~ 15</li><li class="pt " style="">Page traffic value $0~$7 수준 — 실질적 검색 가치 매우 낮음</li><li class="pt " style="">AI 인용을 위해서는 Domain Rating만이 아닌 개별 URL의 권위도 중요</li></ul><footer class="s-cap">Ahrefs Site Explorer 검색 결과 화면</footer>
+    </div>
+  </div>
+  <div class="s-counter">64<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="64" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI 업데이트 이후 순위 하락 사례</h2>
+      <p class="s-sub">Stanford 철학 백과사전 페이지 — 2023년 11월 순위 급락</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">2023년 11월 29일 이후 SERP 순위 4위로 하락</li><li class="pt " style="">URL: plato.stanford.edu/entries/life-meaning/</li><li class="pt " style="">구글 AI 관련 업데이트(a, G 마커) 시점과 순위 변동 상관관계 확인 가능</li><li class="pt " style="">Ahrefs Rank Tracker로 SERP 변동 이력 추적 방법 시연</li></ul><footer class="s-cap">Ahrefs Rank Tracker — SERP 히스토리 뷰 (1일 전 데이터)</footer>
+    </div>
+  </div>
+  <div class="s-counter">65<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-demo" data-idx="65" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI Overview 인용 도메인 급증 추이</h2>
+      <p class="s-sub">Ahrefs &#x27;Cited pages&#x27; 도구로 AI 인용 현황 모니터링</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">2026년 4월 23일 기준: 약 4,000만 건 인용</li><li class="pt " style="">인용 상위 도메인: YouTube, Facebook, Reddit, Wikipedia, Instagram 순</li><li class="pt " style="">2025년 이후 인용 건수 급격히 증가 (우상향 곡선)</li><li class="pt " style="">내 사이트가 AI Overview에서 얼마나 인용되는지 추적 가능</li></ul><footer class="s-cap">Ahrefs Cited Pages — AI Overviews 필터, 2026년 4월 23일 기준</footer>
+    </div>
+  </div>
+  <div class="s-counter">66<span class="s-total"> / 67</span></div>
+</section>
+<section class="slide sl-content" data-idx="66" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5</span></div>
+      <h2 class="s-head">AI 플랫폼별 시장 점유율 데이터</h2>
+      <p class="s-sub">AI 검색 유입 중 플랫폼별 비율 비교</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">Naver: 0.233 (23.3%) — 1위</li><li class="pt " style="">ChatGPT: 0.165 (16.5%) — 2위</li><li class="pt " style="">Reddit: 0.114 (11.4%) — 3위</li><li class="pt " style="">LinkedIn: 0.105 (10.5%) — 4위</li><li class="pt " style="">Perplexity: 0.020 (2.0%)</li><li class="pt " style="">Copilot: 0.008 (0.8%)</li><li class="pt " style="">Gemini: 0.005 (0.5%)</li></ul><footer class="s-cap">AI 플랫폼 점유율 막대 차트 — 가장 우선순위를 둬야 할 플랫폼 파악용</footer>
+    </div>
+  </div>
+  <div class="s-counter">67<span class="s-total"> / 67</span></div>
+</section>
+</div>
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" aria-label="이전">&#8592;</button>
+  <button class="nav-btn" id="btn-next" aria-label="다음">&#8594;</button>
+</div>
+<div id="hint"><span class="kbd">←</span><span class="kbd">→</span><span style="color:rgba(255,255,255,.15);padding:0 2px">·</span><span class="kbd">Space</span></div>
+<script>
+const LABELS=["TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 4", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5", "TIP 5"];
+const COLORS=["#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6", "#8B5CF6"];
+const slides=Array.from(document.querySelectorAll('.slide'));
+const dotsEl=document.getElementById('dots');
+const pbar=document.getElementById('pbar');
+let cur=0,transitioning=false;
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.title=LABELS[i]||'';d.onclick=()=>go(i);dotsEl.appendChild(d);});
+const dotEls=Array.from(document.querySelectorAll('.dot'));
+function applyColor(c){pbar.style.background=c;pbar.style.color=c;dotEls.forEach((d,i)=>d.style.background=i===cur?c:'')}
+function go(n){
+  if(transitioning)return;n=Math.max(0,Math.min(n,slides.length-1));if(n===cur)return;
+  transitioning=true;const prev=cur;slides[prev].classList.remove('active');slides[prev].classList.add('exit');
+  setTimeout(()=>slides[prev].classList.remove('exit'),450);cur=n;slides[cur].classList.add('active');
+  pbar.style.width=((cur+1)/slides.length*100)+'%';applyColor(COLORS[cur]);
+  dotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));dotEls[cur]?.scrollIntoView({block:'nearest',inline:'center'});
+  setTimeout(()=>transitioning=false,450);
+}
+slides[0].classList.add('active');pbar.style.width=(1/slides.length*100)+'%';dotEls[0]?.classList.add('active');applyColor(COLORS[0]);
+document.getElementById('btn-prev').onclick=()=>go(cur-1);
+document.getElementById('btn-next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+  if(e.key==='ArrowLeft'){e.preventDefault();go(cur-1)}
+  if(e.key==='Home')go(0);if(e.key==='End')go(slides.length-1);
+});
+let sx=0,sy=0;
+document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{const dx=sx-e.changedTouches[0].clientX;const dy=Math.abs(sy-e.changedTouches[0].clientY);if(Math.abs(dx)>44&&dy<40)go(dx>0?cur+1:cur-1);});
+</script>
+</body>
+</html>
