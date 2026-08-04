@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 마케팅 자동화로 억대 매출 내는 3가지 방법</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-deep:#020203;--bg-base:#050506;--bg-elevated:#0a0a0c;
+  --surface:rgba(255 255 255/.04);--surface-hi:rgba(255 255 255/.07);
+  --fg:#EDEDEF;--fg-muted:#8A8F98;--border:rgba(255 255 255/.08);
+  --radius:16px;--ease:cubic-bezier(0.16,1,0.3,1);--dur:420ms;
+  font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
+}
+html,body{height:100%;background:linear-gradient(160deg,#0a0a0f 0%,var(--bg-deep) 100%);color:var(--fg);overflow:hidden}
+#pbar{position:fixed;top:0;left:0;height:2px;z-index:300;transition:width var(--dur) var(--ease),background .6s var(--ease);filter:blur(0.5px)}
+#pbar::after{content:'';position:absolute;inset:0;box-shadow:0 0 12px currentColor,0 0 4px currentColor;background:inherit}
+#dots{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;z-index:300;max-width:80vw;flex-wrap:wrap;justify-content:center}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255 255 255/.18);cursor:pointer;transition:transform .25s var(--ease),background .3s}
+.dot.active{transform:scale(1.7)}
+#deck{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:48px 64px 80px;opacity:0;pointer-events:none;transform:translateX(32px) scale(.985);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);will-change:opacity,transform}
+.slide.active{opacity:1;pointer-events:auto;transform:translateX(0) scale(1)}
+.slide.exit{opacity:0;transform:translateX(-32px) scale(.985);pointer-events:none}
+.blob{position:absolute;pointer-events:none;border-radius:50%;filter:blur(48px);will-change:transform}
+.blob-a{width:55vw;height:55vw;top:-10%;left:-15%;animation:drift-a 12s ease-in-out infinite}
+.blob-b{width:40vw;height:40vw;bottom:5%;right:-10%;animation:drift-b 16s ease-in-out infinite}
+@keyframes drift-a{0%,100%{transform:translate(0,0)}50%{transform:translate(6%,5%)}}
+@keyframes drift-b{0%,100%{transform:translate(0,0)}50%{transform:translate(-5%,-6%)}}
+.glass-card{position:relative;z-index:1;width:100%;max-width:960px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:52px 60px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255 255 255/.06) inset,0 32px 80px rgba(0 0 0/.6);background-image:linear-gradient(to bottom,rgba(255 255 255/.06) 0%,transparent 2px)}
+.s-inner{display:flex;flex-direction:column;gap:0}
+.s-tag-wrap{margin-bottom:18px}
+.s-tag{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid;transition:background .3s,border-color .3s}
+.s-head{font-size:clamp(24px,3.8vw,52px);font-weight:800;line-height:1.15;letter-spacing:-.025em;color:var(--fg);margin-bottom:14px;text-wrap:balance}
+.sl-title .s-head{font-size:clamp(34px,5.5vw,68px);background:linear-gradient(140deg,#fff 40%,rgba(255,255,255,.45));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sl-trans .s-head{font-size:clamp(38px,6vw,74px);font-weight:900}
+.s-sub{font-size:clamp(13px,1.5vw,18px);color:var(--fg-muted);line-height:1.65;margin-bottom:24px;font-weight:400}
+.pts{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.pt{font-size:clamp(12.5px,1.3vw,16px);color:rgba(255 255 255/.72);line-height:1.6;padding:10px 15px;border-left:1.5px solid rgba(255 255 255/.1);background:rgba(255 255 255/.03);border-radius:0 8px 8px 0}
+.pt-first{color:var(--fg);font-weight:500;border-left-color:var(--pt-accent);background:rgba(255 255 255/.05)}
+.s-cap{margin-top:16px;padding-top:14px;font-size:11.5px;color:rgba(255 255 255/.28);border-top:1px solid var(--border);letter-spacing:.02em}
+.s-counter{position:absolute;bottom:24px;right:40px;z-index:2;font-size:11px;font-weight:600;color:rgba(255 255 255/.25);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.s-total{font-weight:400;color:rgba(255 255 255/.12)}
+#nav{position:fixed;top:50%;transform:translateY(-50%);width:100%;z-index:300;pointer-events:none;display:flex;justify-content:space-between;padding:0 12px}
+.nav-btn{pointer-events:auto;width:38px;height:38px;border-radius:50%;background:var(--surface-hi);border:1px solid var(--border);color:var(--fg-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;opacity:.35;transition:opacity .2s var(--ease),background .2s,transform .15s var(--ease)}
+.nav-btn:hover{background:rgba(255 255 255/.1);color:var(--fg);opacity:1}
+.nav-btn:active{transform:scale(.95)}
+#hint{position:fixed;top:16px;right:20px;z-index:300;display:flex;gap:5px;align-items:center;opacity:.4;transition:opacity .2s}
+#hint:hover{opacity:.9}
+.kbd{background:rgba(255 255 255/.06);border:1px solid var(--border);font-size:10px;font-family:monospace;padding:2px 6px;border-radius:4px;color:var(--fg-muted)}
+@media(prefers-reduced-motion:reduce){.slide{transition:opacity .15s}.blob{animation:none}}
+</style>
+</head>
+<body>
+<div id="pbar"></div>
+<div id="dots"></div>
+<div id="deck">
+<section class="slide sl-demo" data-idx="0" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">AI 마케팅 채널 유튜브 레퍼런스 화면</h2>
+      <p class="s-sub">유튜브 채널 — 와.. 이거였구나.</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">클로드 코드로 24시간 일하는 마케팅 팀을 구축했습니다!</li><li class="pt " style="">AI 때문에 잠 못 자는 분들만 보세요, 생존 공식은 이미 나왔습니다</li><li class="pt " style="">99% 모르는 제미나이 3.5 실전 활용법 5가지</li><li class="pt " style="">(FULL VER) 스스로 성장하는 AI가 나왔다.. 헤르메스 에이전트 사용법 A to Z</li><li class="pt " style="">2달 동안 직접 회사에 들어가 5천만원을 아꼈습니다 (ROAS 300% 개선)</li><li class="pt " style="">클로드코드 쓰지 말고 N8N부터 하세요(AI 전문가들이 N8N을 쓰는 이유)</li></ul><footer class="s-cap">AI 마케팅 팀을 구축하기 전에는</footer>
+    </div>
+  </div>
+  <div class="s-counter">1<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-title" data-idx="1" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">AI로 마케팅을 자동화해 억대 매출을 내는 3가지 방법</h2>
+      <p class="s-sub">GRANT · AI 마케팅 자동화</p><footer class="s-cap">그래서 오늘 영상에서는 AI 마케팅을 토대로</footer>
+    </div>
+  </div>
+  <div class="s-counter">2<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="2" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">AI로 돈 벌기, 왜 생각보다 어려울까?</h2>
+      <p class="s-sub">왜 어려운가</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">속도 — 전자책·앱... 무언가를 만드는 속도는 확실히 빨라졌습니다</li><li class="pt " style="">현실 — 하지만 실제로 팔아서 돈을 버는 것은 완전히 다른 이야기</li><li class="pt " style="">변화 — GPT·제미나이를 &#x27;딸깍&#x27; 쓰는 마케팅 시대는 이미 끝났습니다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">3<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="3" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">ATP 입시연구소 통합 OS — UTM 관리</h2>
+      <p class="s-sub">마케팅 · UTM 관리</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">UTM 링크 만들기 (utm_medium · utm_campaign · utm_content)</li><li class="pt " style="">Base URL: https://www.studyshelter.co.kr/MASTERCLASS1/?idx=5</li><li class="pt " style="">utm_medium(예제): instagram / utm_campaign: insta_reels</li><li class="pt " style="">utm_content(보통 YYMMDD): 260728</li><li class="pt " style="">완성된 추적 링크가 여기 표시됩니다</li><li class="pt " style="">UTM 시트 — 라이브 · 6건 표시</li></ul><footer class="s-cap">이 한 OS 화면 안에 나타낸 거라고</footer>
+    </div>
+  </div>
+  <div class="s-counter">4<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="4" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">ATP 입시연구소 통합 OS — 대본생성기</h2>
+      <p class="s-sub">마케팅 · 유튜브팀 · 대본생성기</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">주제만 넣으면 동종 대본 공식 + USP로 유튜브 대본 완성 · 쇼링키·릉품/쇼츠 · 보트 자동저장</li><li class="pt " style="">영상 수제·썸급 입력란</li><li class="pt " style="">대본 타입: 키(설득) / 대상: 학부모 / 영상 유형: 롱폼</li><li class="pt " style="">내 추천 붙이넣기(선택) — 있으면 이 초안을 공식+USP로 다듬어 워싱본을 줍니다</li><li class="pt " style="">지정된 대본 탭 리스트 표시</li><li class="pt " style="">데이터가 굉장히 잘 적재되기 때문에</li></ul><footer class="s-cap">제가 지금까지 썼던 엄청나게 많은 글들과</footer>
+    </div>
+  </div>
+  <div class="s-counter">5<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="5" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">ATP 입시연구소 통합 OS — 인스타그램 콘텐츠 현황</h2>
+      <p class="s-sub">마케팅 · 인스타그램 · 인스타 콘텐츠 현황</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">종류별 분포: 자료 제공 10건 / 퍼포먼스 4건</li><li class="pt " style="">콘텐츠 파이프라인 — Notion 시트 = 단일 접실원</li><li class="pt " style="">기획안·상태·종류 검색 / 23건 표시</li><li class="pt " style="">각 올린 거에 대해서 실제 지금 지표가 어떤지</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">6<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="6" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">ATP 입시연구소 통합 OS — CRM팀 문자·알림톡 발송</h2>
+      <p class="s-sub">CRM팀 · 문자·알림톡 발송</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">AI 지정 — 예: 상담 예약 리마인드, 따뜻하게 (anthropic/claude-sonnet-4.6)</li><li class="pt " style="">받는 사람 — 체크한 고객에게만 발송 · 수신거부·연락처 없음은 자동 제외</li><li class="pt " style="">선택 0명 / 포시 124명</li><li class="pt " style="">저희 고객분들의 데이터를 실제로 연동을 해서</li><li class="pt " style="">실전 예시들을 많이 보여드릴 텐데</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">7<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="7" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">마케팅은 크게 3가지로 정의합니다</h2>
+      <p class="s-sub">전체 구조</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">01 · SNS 콘텐츠 — 오가닉 마케팅 / 돈을 쓰지 않고 트래픽을 가져오는 것 / 유튜브 · 인스타 릴스</li><li class="pt " style="">02 · 페이드 광고 — 퍼포먼스 마케팅 / 돈을 넣어 고객에게 계속 노출시키는 것 / 콘텐츠 + 데이터 드리븐</li><li class="pt " style="">03 · CRM — 고객 관리 / 문자·알림톡으로 관심 고객을 붙잡는 것 / 구글 시트 연동 자동화</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">8<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-trans" data-idx="8" data-color="#6B7280" data-rgb="107,114,128">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">INTRO</span></div>
+      <h2 class="s-head">SNS 콘텐츠 마케팅 자동화 팀 핵심 워크플로우</h2>
+      <p class="s-sub">CHAPTER 01 · 오가닉</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">1 — 레퍼런스 수집 — 잘된 유튜브 썸네일, 릴스 레퍼런스를 모으기</li><li class="pt " style="">2 — 레퍼런스 기반 영상 대본 생성, 릴스 대본 생성, 블로그 글 생성, 카드뉴스 생성</li><li class="pt " style="">3 — 편집 후 업로드 자동화 및 자동 트래킹</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">9<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="9" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">SNS 콘텐츠 마케팅 자동화 팀 핵심 워크플로우</h2>
+      <p class="s-sub">CHAPTER 01 · 오가닉</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">1  레퍼런스 수집 — 잘된 유튜브 썸네일, 릴스 레퍼런스를 모으기</li><li class="pt " style="">2  레퍼런스 기반 영상 대본 생성, 릴스 대본 생성, 블로그 글 생성, 카드뉴스 생성</li><li class="pt " style="">3  편집 후 업로드 자동화 및 자동 트래킹</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">10<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="10" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">ATP 입시연구소 — 떡상 레퍼런스 파인더</h2>
+      <footer class="s-cap">터진 영상 발굴 → 우리 USP로 풀링 1편 + 키 1편 세트 설계 / 키워드 입력 후 찾기 버튼 클릭 시 채널 평균 조회수 대비 높은 순으로 표시</footer>
+    </div>
+  </div>
+  <div class="s-counter">11<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="11" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">떡상 레퍼런스 파인더 — &#x27;생기부&#x27; 키워드 검색 결과</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">호미들 - 생기부 가사 | Lyric | smay  (조회 141만 / 채널평균 16.7만 → 8.4x)</li><li class="pt " style="">09·10년생 주목! 2026 최신 생기부 항목별 티어리스트 (조회 9.5만 / 채널평균 1.2만 → 8x)</li><li class="pt " style="">&quot;이건 너무 심하잖아요&quot;…탈담이 쓴 &#x27;엉터리 생기부&#x27; / KBS 2026.07.21. (조회 16.5만 / 채널평균 2.4만 → 6.8x)</li></ul><footer class="s-cap">4개 발견 · 채널 평균 대비 4배+ · 베수 높은 순 (스전 50개 중 · 소스 30개 제외)</footer>
+    </div>
+  </div>
+  <div class="s-counter">12<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="12" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">ATP 입시연구소 — 대본생성기</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">영상 수제·동급 입력란: 예) 내신 3등급인데 생기부로 단시율 약전한 방법 / GPT로 쓴 생기부가 위험한 이유</li><li class="pt " style="">대본 타입: 키(설득) / 대상: 학부모 / 영상 유형: 롱폼</li><li class="pt " style="">지정된 대본 보기 및 레퍼런스 기반 대본 생성 가능</li></ul><footer class="s-cap">주제만 넣으면 동공 대본 공식 + USP로 유튜브 대본 완성 · 풀링/키·롱폼/소스·보트 자동저장</footer>
+    </div>
+  </div>
+  <div class="s-counter">13<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="13" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">플링(모으기) 유튜브 대본 생성 중</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">레퍼런스 분석 + 우리 USP로 플링(모으기) 대본 작성 중… (최대 30초)</li><li class="pt " style="">대상: 학부모</li></ul><footer class="s-cap">떡상 레퍼런스 파인더에서 &#x27;플링+키 세트&#x27; 버튼 클릭 → AI가 레퍼런스 영상 분석 후 대본 자동 생성</footer>
+    </div>
+  </div>
+  <div class="s-counter">14<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="14" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">플링(모으기) 대본 — 레퍼런스: 09·10년생 주목! 2026 최신 생기부 항목별 티어</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">## 레퍼런스가 터진 이유: &#x27;생기부에서 뭐가 진짜 중요한지 모르겠다&#x27;는 정보 과부하 불안을 &#x27;티어리스트&#x27;라는 게임·밀 포맷으로 해소</li><li class="pt " style="">## 제목 후보 (5개): 생기부 절반은 버려도 됩니다 / 세목별 잘 쓰면 되는 기 아닌가요? / 내신이 평범한 아이, 생기부 어디에 시간 써야 할까요 / 생기부 12개 항목 중 입시에서 진짜 쓰이는 건 이것뿐입니다 / 다 챙겨야 해요 들렸습니다</li><li class="pt " style="">## 채널 문구 (3안): 1안 &gt; 생기부 12개 항목 / 절반은 버려도 됩니다 / (작게) 5,000개 데이터가 말하는 진짜 중요한 것</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">15<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="15" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">플링 대본 — 동선 설계 및 USP 무기 섹션</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">공통 문제: 생기부 어디에 집중해야 할지 몰라서, 중요한 항목은 놓치고 안 중요한 데 에너지를 다 쓰고 있다</li><li class="pt " style="">1편 풀링 제목: [욕구] 내신 2~3등급 학부모가 생기부에서 시간 낭비하는 항목 TOP 3</li><li class="pt " style="">2편 키 제목: [개패] 내신 2~3등급이 인서울 간 생기부 전략, 딱 3가지</li><li class="pt " style="">USP 무기: 5,000개+ 합격 데이터를 만든 역진 알고리즘 — 중위권이 어느 항목에서 만진했는지 패턴이 있다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">16<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="16" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">ATP 입시연구소 — 인스타그램팀 콘텐츠 파이프라인</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">시작 전 0건 / 기획중 0건 / 촬영완료 2건 / 포스팅 완료 19건</li><li class="pt " style="">종류별 분포: 자료 제공 10 / 퍼포먼스 4</li><li class="pt " style="">콘텐츠 목록: 정보형_3등급이 인서울 하는 법 / 정보형_중위권 생기부에 나오면 안되는 것 / 정보형_같은 등급이어도 대학이 달라짐 / 정보형_체기 만약 처음부터 생기부를 챙겼다면</li></ul><footer class="s-cap">Notion 시트 = 단열 진실원 · 기획안·상태·종류 검색 23건 표시</footer>
+    </div>
+  </div>
+  <div class="s-counter">17<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-trans" data-idx="17" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">페이드 광고</h2>
+      <p class="s-sub">CHAPTER 02</p>
+    </div>
+  </div>
+  <div class="s-counter">18<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="18" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">잘되는 사업가는 전부 광고를 합니다</h2>
+      <p class="s-sub">CHAPTER 02 · 페이드 광고</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">통념  &quot;광고 별로 아니야?&quot; — 대부분 페이드 광고를 못하고, 싫어합니다</li><li class="pt " style="">현실  하지만 돈을 쓰면 고객에게 계속 노출시킬 수 있습니다</li><li class="pt " style="">차이  SNS 콘텐츠와 달리 노출을 내가 통제할 수 있는 유일한 방법</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">19<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="19" data-color="#5E6AD2" data-rgb="94,106,210">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1</span></div>
+      <h2 class="s-head">페이드 광고는 2가지 요소</h2>
+      <p class="s-sub">CHAPTER 02 · 페이드 광고</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">① 콘텐츠 — SNS 콘텐츠와 비슷한 영역 / 광고 소재를 만드는 일</li><li class="pt " style="">② 데이터 드리븐 — 어떤 고객이 어디서 오는지 정확히 판단 / UTM, GA4 등 고객이 어디서 오는지 그리고 ROAS를 계산한다</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">20<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="20" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">페이드 광고는 2가지 요소</h2>
+      <p class="s-sub">CHAPTER 02 · 페이드 광고</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">① 콘텐츠 — SNS 콘텐츠와 비슷한 영역 / 광고 소재를 만드는 일</li><li class="pt " style="">② 데이터 드리븐 — 어떤 고객이 어디서 오는지 정확히 판단</li><li class="pt " style="">UTM, GA4 등 고객이 어디서 오는지 그리고 ROAS를 계산한다.</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">21<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="21" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">ATP 입시연구소 · 메타 광고 대시보드</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">30일 지출: ₩229,191 / 노출: 16,483 (도달 10,688) / 클릭: 521 (CTR 3.16%)</li><li class="pt " style="">CPC: ₩440 / 랜딩뷰: 369 / 상담형 이벤트: 500</li><li class="pt " style="">광고 단가 지표 — CPR ★ ₩458 (상담 리드당·핵심) / CPM ₩13,905 / CTR 3.16% / CPC ₩440</li><li class="pt " style="">일자별 광고비 (최근 10일) 바 차트 / 광고 퍼널: 노출 16,483 → 클릭 521 → 랜딩뷰 369 → 상담형 이벤트 500</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">22<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="22" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">ATP 입시연구소 · UTM 관리</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">UTM 링크 만들기 (utm_medium · utm_campaign · utm_content)</li><li class="pt " style="">Base URL: https://www.studyshelter.co.kr/MASTERCLASS1/?idx=5</li><li class="pt " style="">utm_medium: instagram / utm_campaign: insta_reels / utm_content: 260728</li><li class="pt " style="">UTM 시트 (라이브 6건) — 인스타그램 릴스 260616 / meta_ads 260621 등 채널별 Full URL 관리</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">23<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-trans" data-idx="23" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">데이터 드리븐이란?</h2>
+      
+    </div>
+  </div>
+  <div class="s-counter">24<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="24" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">지금은 CRM이 정말 중요합니다.</h2>
+      <p class="s-sub">CHAPTER 03 · CRM</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">콘텐츠가 쉬워지면서 누구를 팔로우했는지도 기억 못 하는 시대</li><li class="pt " style="">한 번이라도 관심을 표출한 고객을 잡는 것이 중요합니다</li><li class="pt " style="">주 1회 양질의 정보 전달 혹은 지속적인 컨택 유지</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">25<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="25" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">ATP 입시연구소 · 문자·알림톡 발송</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">발송 가능: 124명 / 수신거부: 0명 (자동 제외) / 템플릿: 22개 (알림톡 18개)</li><li class="pt " style="">AI 지침 — 예: 상담 예약 리마인드, 따뜻하게 (anthropic/claude-sonnet-4.6)</li><li class="pt " style="">수신인 고객 DB 목록: 김미경 01053092545 / 이효정 01032903618 / 김정훈 / 박효세 외</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">26<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="26" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2</span></div>
+      <h2 class="s-head">교육회사 상담 자동화, 이렇게 설계했습니다</h2>
+      <p class="s-sub">실제 사례</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">STEP 1 · 신청 즉시 — 고객 데이터 정리 후 즉시 발송 / &quot;컨설턴트가 직접 분석 중&quot; / 문구로 신뢰 형성</li><li class="pt " style="">STEP 2 · 상담 전 — 1일 전 · 1시간 전 · 10분 전 / 자동 알람 발송 / 노쇼 방지</li><li class="pt " style="">STEP 3 · 상담 후 — 녹음 파일 → 개인화 보고서 / 자동 생성 후 / 알림톡 발송</li></ul><footer class="s-cap">2달간 직접 세팅해 비용 5천만 원을 절감</footer>
+    </div>
+  </div>
+  <div class="s-counter">27<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="27" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">교육회사 상담 자동화, 이렇게 설계했습니다</h2>
+      <p class="s-sub">실제 사례</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">STEP 1 · 신청 즉시 — 고객 데이터 정리 후 즉시 발송 / &quot;컨설턴트가 직접 분석 중&quot; 문구로 신뢰 형성</li><li class="pt " style="">STEP 2 · 상담 전 — 1일 전 · 1시간 전 · 10분 전 자동 알람 발송 / 노쇼 방지</li><li class="pt " style="">STEP 3 · 상담 후 — 녹음 파일 → 개인화 보고서 자동 생성 후 알림톡 발송</li></ul><footer class="s-cap">2달간 직접 세팅해 비용 5천만 원을 절감</footer>
+    </div>
+  </div>
+  <div class="s-counter">28<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="28" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">숫자로 증명된 결과</h2>
+      <p class="s-sub">결과</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">+7% — 상담 → 결제 전환율 상승</li><li class="pt " style="">5천만 원 — 2달간 절감한 인건비·운영 비용</li><li class="pt " style="">3개 + — 같은 템플릿으로 운영 중인 사업</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">29<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="29" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">혼자서 다 하는 대표 vs AI 팀이 있는 대표</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">[혼자 다 하는 사업자] 오전 내내 카드뉴스 1장 만들기</li><li class="pt " style="">[혼자 다 하는 사업자] 광고는 감으로 켰다 껐다</li><li class="pt " style="">[혼자 다 하는 사업자] 상담 신청 오면 그때그때 수동 문자</li><li class="pt " style="">[혼자 다 하는 사업자] 하루가 끝나면 정작 &#x27;사업&#x27;은 못 함</li><li class="pt " style="">[AI 팀을 세팅한 사업자] 콘텐츠는 OS가 초안까지 자동 생성</li><li class="pt " style="">[AI 팀을 세팅한 사업자] 광고는 숫자 보고 판단만</li><li class="pt " style="">[AI 팀을 세팅한 사업자] 알림톡·문자는 자동 발송</li><li class="pt " style="">[AI 팀을 세팅한 사업자] 남는 시간에 상품과 고객에 집중</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">30<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="30" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">정작 중요한 일은 못하고 허드렛일만 하고 있습니다.</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">처음 교육회사를 운영하면서</li><li class="pt " style="">ai 공부를 절실하게 했던 이유이기도 합니다.</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">31<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="31" data-color="#F59E0B" data-rgb="245,158,11">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3</span></div>
+      <h2 class="s-head">0원부터 시작한다면, 이 순서로 하세요</h2>
+      <p class="s-sub">그래서 뭐부터?</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#F59E0B">STEP 1 — 오가닉부터 시작 / 돈 들지 않는 콘텐츠로 먼저 반응을 확인합니다</li><li class="pt " style="">STEP 2 — 소액 광고 테스트 / 반응 온 콘텐츠에만 하루 1~2만 원씩 태워봅니다</li><li class="pt " style="">STEP 3 — 들어온 고객은 CRM / 연락처를 남긴 고객은 무조건 챙깁니다</li></ul><footer class="s-cap">오가닉 콘텐츠로 실력을 키우고 데이터 드리븐을 배워서 규모를 키우자!</footer>
+    </div>
+  </div>
+  <div class="s-counter">32<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="32" data-color="#34D399" data-rgb="52,211,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS</span></div>
+      <h2 class="s-head">0원부터 시작한다면, 이 순서로 하세요</h2>
+      <p class="s-sub">그래서 뭐부터?</p><ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">STEP 1 — 오가닉부터 시작 / 돈 들지 않는 콘텐츠로 / 먼저 반응을 확인합니다</li><li class="pt " style="">STEP 2 — 소액 광고 테스트 / 반응 온 콘텐츠에만 / 하루 1~2만 원씩 태워봅니다</li><li class="pt " style="">STEP 3 — 들어온 고객은 CRM / 연락처를 남긴 고객은 / 무조건 챙깁니다</li></ul><footer class="s-cap">오가닉 콘텐츠로 실력을 키우고 데이터 드리븐을 배워서 규모를 키우자!</footer>
+    </div>
+  </div>
+  <div class="s-counter">33<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="33" data-color="#34D399" data-rgb="52,211,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS</span></div>
+      <h2 class="s-head">불안하다면, 움직입시다</h2>
+      
+    </div>
+  </div>
+  <div class="s-counter">34<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-content" data-idx="34" data-color="#34D399" data-rgb="52,211,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS</span></div>
+      <h2 class="s-head">똑같은 도구가 주어졌는데 누군가는 앞서나갑니다.</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">각 점은 약 320만 명을 나타냅니다. (2,500개의 점 = 인류 81억 명, 2026년 2월 기준)</li><li class="pt " style="">AI 미사용자 ~68억 명 (84%)</li><li class="pt " style="">무료 챗봇 사용자 ~13억 명 (16%)</li><li class="pt " style="">월 20달러 유료 AI 사용자 ~1,500만~2,500만 명 (~0.3%)</li><li class="pt " style="">코딩 스캐폴드 활용자 ~200만~500만 명 (~0.04%)</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">35<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="35" data-color="#34D399" data-rgb="52,211,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS</span></div>
+      <h2 class="s-head">[2기 사전 예약] AI 마케팅 오프라인 부트캠프(한달 과정)</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">크레토비 클래스 강의 상품 페이지</li><li class="pt " style="">라이브 후 10분 안에 모두 마감되었습니다.</li><li class="pt " style="">2기 무집은 추후 안내드리겠습니다.</li><li class="pt " style="">2기 대기신청하기: https://tally.so/r/Gx7LPo</li><li class="pt " style="">1기 부트캠프 후기: https://cafe.naver.com/f-e/cafes/31572851/menus/24?viewType=L</li></ul><footer class="s-cap">망해가던 회사에 들어가 2달만에 3억 만든! 마케팅 AI 지원</footer>
+    </div>
+  </div>
+  <div class="s-counter">36<span class="s-total"> / 37</span></div>
+</section>
+<section class="slide sl-demo" data-idx="36" data-color="#34D399" data-rgb="52,211,153">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap"><span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS</span></div>
+      <h2 class="s-head">AI 마케팅 부트캠프 후기 (네이버 카페)</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">카페: CREATORBI (grant 매니저, 회원 1,336명)</li><li class="pt " style="">게시판: AI 마케팅 부트캠프 1기 후기</li><li class="pt " style="">최신 후기 목록: 그랜트 ai 마케팅 부트캠프 3주차 후기 (2026.07.27), 배워서 남주는 유다하신 그랜트님 3주차 후기 (2026.07.26), 그랜트 AI 마케팅 부트캠프 - 3주차 후기 (2026.07.26)</li><li class="pt " style="">총 게시글 300개 이상</li></ul>
+    </div>
+  </div>
+  <div class="s-counter">37<span class="s-total"> / 37</span></div>
+</section>
+</div>
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" aria-label="이전">&#8592;</button>
+  <button class="nav-btn" id="btn-next" aria-label="다음">&#8594;</button>
+</div>
+<div id="hint"><span class="kbd">←</span><span class="kbd">→</span><span style="color:rgba(255,255,255,.15);padding:0 2px">·</span><span class="kbd">Space</span></div>
+<script>
+const LABELS=["INTRO", "INTRO", "INTRO", "INTRO", "INTRO", "INTRO", "INTRO", "INTRO", "INTRO", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 1", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 2", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "TIP 3", "BONUS", "BONUS", "BONUS", "BONUS", "BONUS"];
+const COLORS=["#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#F59E0B", "#34D399", "#34D399", "#34D399", "#34D399", "#34D399"];
+const slides=Array.from(document.querySelectorAll('.slide'));
+const dotsEl=document.getElementById('dots');
+const pbar=document.getElementById('pbar');
+let cur=0,transitioning=false;
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='dot';d.title=LABELS[i]||'';d.onclick=()=>go(i);dotsEl.appendChild(d);});
+const dotEls=Array.from(document.querySelectorAll('.dot'));
+function applyColor(c){pbar.style.background=c;pbar.style.color=c;dotEls.forEach((d,i)=>d.style.background=i===cur?c:'')}
+function go(n){
+  if(transitioning)return;n=Math.max(0,Math.min(n,slides.length-1));if(n===cur)return;
+  transitioning=true;const prev=cur;slides[prev].classList.remove('active');slides[prev].classList.add('exit');
+  setTimeout(()=>slides[prev].classList.remove('exit'),450);cur=n;slides[cur].classList.add('active');
+  pbar.style.width=((cur+1)/slides.length*100)+'%';applyColor(COLORS[cur]);
+  dotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));dotEls[cur]?.scrollIntoView({block:'nearest',inline:'center'});
+  setTimeout(()=>transitioning=false,450);
+}
+slides[0].classList.add('active');pbar.style.width=(1/slides.length*100)+'%';dotEls[0]?.classList.add('active');applyColor(COLORS[0]);
+document.getElementById('btn-prev').onclick=()=>go(cur-1);
+document.getElementById('btn-next').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+  if(e.key==='ArrowLeft'){e.preventDefault();go(cur-1)}
+  if(e.key==='Home')go(0);if(e.key==='End')go(slides.length-1);
+});
+let sx=0,sy=0;
+document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{const dx=sx-e.changedTouches[0].clientX;const dy=Math.abs(sy-e.changedTouches[0].clientY);if(Math.abs(dx)>44&&dy<40)go(dx>0?cur+1:cur-1);});
+</script>
+</body>
+</html>
