@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Claude Code × 유튜브 자동화 — 강의 슬라이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
+<style>
+/* ─ Reset ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ─ Design tokens (Modern Dark Cinema) ─────────────── */
+:root{
+  --bg-deep:    #020203;
+  --bg-base:    #050506;
+  --bg-elevated:#0a0a0c;
+  --surface:    rgba(255 255 255 / .04);
+  --surface-hi: rgba(255 255 255 / .07);
+  --fg:         #EDEDEF;
+  --fg-muted:   #8A8F98;
+  --border:     rgba(255 255 255 / .08);
+  --radius:     16px;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+  --dur:        420ms;
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,body{
+  height:100%;
+  background:linear-gradient(160deg,#0a0a0f 0%,var(--bg-deep) 100%);
+  color:var(--fg);
+  overflow:hidden;
+}
+
+/* ─ Progress bar ──────────────────────────────────── */
+#pbar{
+  position:fixed;top:0;left:0;height:2px;z-index:300;
+  transition:width var(--dur) var(--ease), background .6s var(--ease);
+  filter:blur(0.5px);
+}
+#pbar::after{
+  content:'';position:absolute;inset:0;
+  box-shadow:0 0 12px currentColor, 0 0 4px currentColor;
+  background:inherit;
+}
+
+/* ─ Dots ──────────────────────────────────────────── */
+#dots{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;align-items:center;z-index:300;
+  max-width:80vw;flex-wrap:wrap;justify-content:center;
+}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(255 255 255 / .18);cursor:pointer;
+  transition:transform .25s var(--ease), background .3s;
+  position:relative;
+}
+.dot.active{transform:scale(1.7)}
+
+/* ─ Deck ──────────────────────────────────────────── */
+#deck{width:100vw;height:100vh;position:relative;overflow:hidden}
+
+/* ─ Slide ─────────────────────────────────────────── */
+.slide{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:48px 64px 80px;
+  opacity:0;pointer-events:none;
+  transform:translateX(32px) scale(.985);
+  transition:opacity var(--dur) var(--ease),
+             transform var(--dur) var(--ease);
+  will-change:opacity,transform;
+}
+.slide.active{
+  opacity:1;pointer-events:auto;
+  transform:translateX(0) scale(1);
+}
+.slide.exit{
+  opacity:0;transform:translateX(-32px) scale(.985);
+  pointer-events:none;
+}
+
+/* Ambient blobs */
+.blob{
+  position:absolute;pointer-events:none;
+  border-radius:50%;filter:blur(48px);
+  will-change:transform;
+}
+.blob-a{
+  width:55vw;height:55vw;
+  top:-10%;left:-15%;
+  animation:drift-a 12s ease-in-out infinite;
+}
+.blob-b{
+  width:40vw;height:40vw;
+  bottom:5%;right:-10%;
+  animation:drift-b 16s ease-in-out infinite;
+}
+@keyframes drift-a{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(6%,5%)}
+}
+@keyframes drift-b{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(-5%,-6%)}
+}
+
+/* ─ Glass card ────────────────────────────────────── */
+.glass-card{
+  position:relative;z-index:1;
+  width:100%;max-width:960px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:52px 60px;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 1px 0 rgba(255 255 255 / .06) inset,
+             0 32px 80px rgba(0 0 0 / .6);
+  /* top-edge sheen */
+  background-image:linear-gradient(to bottom,rgba(255 255 255/.06) 0%,transparent 2px);
+}
+
+.s-inner{display:flex;flex-direction:column;gap:0}
+
+/* ─ Tag ───────────────────────────────────────────── */
+.s-tag-wrap{margin-bottom:18px}
+.s-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:4px 12px;border-radius:20px;border:1px solid;
+  transition:background .3s,border-color .3s;
+}
+
+/* ─ Headline ──────────────────────────────────────── */
+.s-head{
+  font-size:clamp(24px,3.8vw,52px);
+  font-weight:800;line-height:1.15;
+  letter-spacing:-.025em;
+  color:var(--fg);
+  margin-bottom:14px;
+  text-wrap:balance;
+}
+.sl-title .s-head{
+  font-size:clamp(34px,5.5vw,68px);
+  background:linear-gradient(140deg,#fff 40%,rgba(255,255,255,.45));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.sl-trans .s-head{
+  font-size:clamp(38px,6vw,74px);
+  font-weight:900;
+}
+
+/* ─ Sub ───────────────────────────────────────────── */
+.s-sub{
+  font-size:clamp(13px,1.5vw,18px);
+  color:var(--fg-muted);line-height:1.65;
+  margin-bottom:24px;font-weight:400;
+}
+
+/* ─ Points ────────────────────────────────────────── */
+.pts{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.pt{
+  font-size:clamp(12.5px,1.3vw,16px);
+  color:rgba(255 255 255 / .72);
+  line-height:1.6;
+  padding:10px 15px;
+  border-left:1.5px solid rgba(255 255 255 / .1);
+  background:rgba(255 255 255 / .03);
+  border-radius:0 8px 8px 0;
+  transition:border-color .2s;
+}
+.pt-first{
+  color:var(--fg);font-weight:500;
+  border-left-color:var(--pt-accent);
+  background:rgba(255 255 255 / .05);
+}
+.pt-mono{
+  font-family:'SF Mono','Fira Code',Consolas,monospace;
+  font-size:clamp(10.5px,1vw,13px);
+  background:rgba(0 10 30 / .5);
+  border-radius:8px;
+  color:#79B8FF;
+  border-left-width:2px;
+  white-space:pre-wrap;
+  letter-spacing:0;
+}
+
+/* ─ Caption ───────────────────────────────────────── */
+.s-cap{
+  margin-top:16px;padding-top:14px;
+  font-size:11.5px;color:rgba(255 255 255 / .28);
+  border-top:1px solid var(--border);
+  letter-spacing:.02em;
+}
+
+/* ─ Counter ───────────────────────────────────────── */
+.s-counter{
+  position:absolute;bottom:24px;right:40px;z-index:2;
+  font-size:11px;font-weight:600;
+  color:rgba(255 255 255 / .25);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.04em;
+}
+.s-total{font-weight:400;color:rgba(255 255 255 / .12)}
+
+/* ─ Nav arrows ────────────────────────────────────── */
+#nav{
+  position:fixed;top:50%;transform:translateY(-50%);
+  width:100%;z-index:300;pointer-events:none;
+  display:flex;justify-content:space-between;padding:0 12px;
+}
+.nav-btn{
+  pointer-events:auto;
+  width:38px;height:38px;border-radius:50%;
+  background:var(--surface-hi);
+  border:1px solid var(--border);
+  color:var(--fg-muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+  opacity:.35;
+  transition:opacity .2s var(--ease), background .2s, transform .15s var(--ease);
+}
+.nav-btn:hover{background:rgba(255 255 255/.1);color:var(--fg);opacity:1}
+.nav-btn:active{transform:scale(.95)}
+
+/* ─ Kbd hint ──────────────────────────────────────── */
+#hint{
+  position:fixed;top:16px;right:20px;z-index:300;
+  display:flex;gap:5px;align-items:center;
+  opacity:.4;transition:opacity .2s;
+}
+#hint:hover{opacity:.9}
+.kbd{
+  background:rgba(255 255 255/.06);
+  border:1px solid var(--border);
+  font-size:10px;font-family:monospace;
+  padding:2px 6px;border-radius:4px;
+  color:var(--fg-muted);
+}
+
+/* ─ Reduced motion ────────────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  .slide{transition:opacity .15s}
+  .blob{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="pbar"></div>
+<div id="dots"></div>
+<div id="deck">
+<section class="slide sl-title" data-idx="0" data-color="#5E6AD2" data-rgb="94,106,210">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
+      </div>
+      <h2 class="s-head">나를 정의한다
+브랜딩 문서작성</h2>
+      <p class="s-sub">모든 작업의 출발점. 클로드가 나처럼 사고하도록 &quot;브랜딩 문서&quot;부터 만든다.</p>
+      
+      <footer class="s-cap">오늘 이제 할 거 9가지였는데</footer>
+    </div>
+  </div>
+  <div class="s-counter">1<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="1" data-color="#5E6AD2" data-rgb="94,106,210">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
+      </div>
+      <h2 class="s-head">한 문장으로 나를 포지셔닝 한다</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">&quot;[타겟]이 [문제]를 겪을 때, [경쟁]과 달리 [나만의 방법]으로 돕는 채널&quot;</li><li class="pt pt-first" style="">이 한 문장이 흐릿하면, 주제도 썸네일도 매번 흔들립니다. 포지셔닝은 &quot;나는 무엇을 하는 채널인가&quot;가 아니라, &quot;왜 하필 나를 봐야 하는가&quot;에 답하는 것입니다.</li><li class="pt pt-first" style="">클로드에게: &quot;brand.md로 이 공식에 맞춰 포지셔닝 문장 3개 후보 만들어줘.&quot;</li></ul>
+      <footer class="s-cap">나만의 방법으로 뭔가를 돕는다에 각자 이 4개를 채우면</footer>
+    </div>
+  </div>
+  <div class="s-counter">2<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="2" data-color="#5E6AD2" data-rgb="94,106,210">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
+      </div>
+      <h2 class="s-head">채널 정보를 통째로 넘긴다</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#5E6AD2">[Claude Code Desktop 프롬프트]</li><li class="pt pt-first" style="">내 채널 정보 줄게. 이걸로 브랜딩 문서를 만들어줘.</li><li class="pt pt-first" style="">- 주제: [내 분야] / 구독자·평균 조회수</li><li class="pt pt-first" style="">- 잘된 영상 5개 / 안된 영상 5개 (제목·조회수)</li><li class="pt pt-first" style="">- 내가 자주 쓰는 말투, 댓글 반응</li><li class="pt pt-first" style="">정체성·USP·타겟·톤·금기로 정리해서 brand.md로 저장.</li><li class="pt pt-first" style="">✓ brand.md 생성 중... 5개 항목으로 구조화합니다.</li><li class="pt pt-first" style="">핵심 원칙: 역할 · 입력 · 규칙 · 출력 형식을 분리해서 지시한다.</li></ul>
+      <footer class="s-cap">내 채널 링크 주고 나서</footer>
+    </div>
+  </div>
+  <div class="s-counter">3<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="3" data-color="#5E6AD2" data-rgb="94,106,210">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
+      </div>
+      <h2 class="s-head">타이핑 X, 질문에 말로 답하기</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#5E6AD2">[Claude Code Desktop 프롬프트]</li><li class="pt pt-first" style="">내 채널 브랜딩 문서를 만들 거야. 먼저 나를 인터뷰하는 질문지부터 만들어줘.</li><li class="pt pt-first" style="">- 정체성·USP·타겟·금기·실제 경험을 끌어내는 질문</li><li class="pt pt-first" style="">- 추상적 질문 X, &quot;구체적 일화&quot;를 끌어내는 톤으로</li><li class="pt pt-first" style="">- 쉬운 말로 15개, 한 번에 답할 수 있게</li><li class="pt pt-first" style="">✓ 질문지_브랜딩.md 생성 (15문항)</li><li class="pt pt-first" style="">질문지를 보며 그냥 말로 답을 녹음 → 녹음 파일을 전달 → &quot;이 녹음 전사해서 brand.md 만들어줘&quot;</li></ul>
+      <footer class="s-cap">내가 이걸 바탕으로 브랜드 문서를 할 건데</footer>
+    </div>
+  </div>
+  <div class="s-counter">4<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="4" data-color="#5E6AD2" data-rgb="94,106,210">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
+      </div>
+      <h2 class="s-head">브랜드 문서 = 8요소</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">근거 · FRAMEWORK BASIS: 도널드 밀러(Donald Miller · StoryBrand) — 베스트셀러 『스토리브랜드』저자. &quot;브랜드 명료화 문서(BrandScript)&quot; 원리를 크리에이터 채널용 8요소로 재구성.</li><li class="pt pt-first" style="">01 브랜드 코어 — 미션·왜 존재하나</li><li class="pt pt-first" style="">02 타겟 페르소나 — 누구의 어떤 문제</li><li class="pt pt-first" style="">03 포지셔닝 — 경쟁 속 내 자리</li><li class="pt pt-first" style="">04 콘텐츠 기둥 — 반복 주제 3~5축</li><li class="pt pt-first" style="">05 보이스 &amp; 톤 — 말투·예시·금지어</li><li class="pt pt-first" style="">06 비주얼 — 컬러·타이포·썸네일</li><li class="pt pt-first" style="">07 브랜드 키워드 — 형용사 3개</li><li class="pt pt-first" style="">08 USP · 금기 — 차별점 + No-list</li></ul>
+      <footer class="s-cap">나를 인터뷰해 달라라고 하시면 됩니다</footer>
+    </div>
+  </div>
+  <div class="s-counter">5<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="5" data-color="#3DD68C" data-rgb="61,214,140">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
+      </div>
+      <h2 class="s-head">&quot;이번 주 뭐 찍지?&quot;, 감으로 고른다</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">[흔한 방식 X] 느낌·기분 / &quot;왠지 이게 될 것 같은데?&quot; / 결과: 왜 됐는지·왜 망했는지, 영원히 모름.</li><li class="pt pt-first" style="">[TIP 2] 내 채널, 성과 공식 / &quot;내 채널은 이런 영상이 평균 3배 터진다&quot; / 결과: 다음 기획의 근거가 생김.</li></ul>
+      <footer class="s-cap">이게 불가능하지만 하다 보면</footer>
+    </div>
+  </div>
+  <div class="s-counter">6<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="6" data-color="#3DD68C" data-rgb="61,214,140">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
+      </div>
+      <h2 class="s-head">잘된/안된 영상, 공식 추출</h2>
+      <p class="s-sub">21 · TIP 2 · 방법 ②</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#3DD68C">[Claude Code Desktop 프롬프트] 1위 영상과 평소보다 잘된 영상 패턴을 분석해서, 썸네일·제목·대본의 형태를 공식으로 정리해줘.</li><li class="pt pt-first" style="">공식: [구체적 문제] + [현장형 권위] + [숫자 결과]</li><li class="pt pt-first" style="">썸네일·제목·대본 공식 → formula.md 저장</li><li class="pt pt-first" style="">&quot;우리 채널은 이런 게 터진다&quot;가 글로 남는다.</li></ul>
+      <footer class="s-cap">근데 저는 안 된 거는 굳이 안 해요</footer>
+    </div>
+  </div>
+  <div class="s-counter">7<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="7" data-color="#3DD68C" data-rgb="61,214,140">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
+      </div>
+      <h2 class="s-head">내 1위 영상은 왜 터졌나</h2>
+      <p class="s-sub">22 · TIP 2 · 손에 넣는 것</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">썸네일: &quot;지금 당장 -10타!&quot; — 큰 글자 + 강조색 1~2단어</li><li class="pt pt-first" style="">제목: &quot;라운드 전 이것만 기억하면&quot; — 호기심 갭 + 구체 상황</li><li class="pt pt-first" style="">대본: 첫 8초 문제 직타격 — 결과 약속 → 전개</li><li class="pt pt-first" style="">이 잘되는 공식이 다음 모든 기획의 베이스라인이 됩니다.</li></ul>
+      <footer class="s-cap">엄청 디테일하게 나와요</footer>
+    </div>
+  </div>
+  <div class="s-counter">8<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="8" data-color="#3DD68C" data-rgb="61,214,140">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
+      </div>
+      <h2 class="s-head">잘된 공식, 수영 채널도 같다</h2>
+      <p class="s-sub">24 · TIP 2 · 잘된 영상 분석 ①</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">썸네일: &quot;초보자가 상급자 되는&quot; — 변신·되는 법 + 강조 색</li><li class="pt pt-first" style="">제목: &quot;수영선수가 알려주는 최단 루트&quot; — 내부자 권위 + 시간 즉효</li><li class="pt pt-first" style="">대본: 권위 제시 → 핵심 동작 — 따라하면 된다는 약속</li><li class="pt pt-first" style="">주제는 달라도 공식은 반복됩니다.</li></ul>
+      <footer class="s-cap">수영 채널도 뭐 이런 것들을 통해서 썸네일 어땠고</footer>
+    </div>
+  </div>
+  <div class="s-counter">9<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="9" data-color="#F59E0B" data-rgb="245,158,11">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
+      </div>
+      <h2 class="s-head">경쟁·레퍼런스 채널, 전수 추출</h2>
+      <p class="s-sub">27 · TIP 3 · 방법 ①</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code Desktop 프롬프트] 아래 채널들 최근 25편씩 전수 추출해서 다루는 주제·인기 소재를 리스트업 해줘. {링크1} {링크2} {링크3} ... {링크N}</li><li class="pt pt-first" style="">N채널 × 25편 분석 중 (백그라운드) — 다른 일 하셔도 됩니다.</li><li class="pt pt-first" style="">백그라운드로 동시 처리, 일하는 동안 다른 작업.</li></ul>
+      <footer class="s-cap">모아뒀던 채널 정리해 두신 게 있으면</footer>
+    </div>
+  </div>
+  <div class="s-counter">10<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="10" data-color="#F59E0B" data-rgb="245,158,11">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
+      </div>
+      <h2 class="s-head">&quot;평균 대비 배수&quot;만 추려라</h2>
+      <p class="s-sub">28 · TIP 3 · 방법 ②</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code Desktop 프롬프트] 여러 채널에서 반복되는 키워드와 카피라이팅 구조를 추려주고, 채널 평균 대비 조회수가 높은 영상을 리스트업 해줘.</li><li class="pt pt-first" style="">결과: 반복 키워드·카피 구조 12개 / 평균 대비 상위 28편</li><li class="pt pt-first" style="">우연이 아닌, 반복되는 카피 구조를 찾는다.</li></ul>
+      <footer class="s-cap">어떤 식으로 하는지가 나옵니다</footer>
+    </div>
+  </div>
+  <div class="s-counter">11<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="11" data-color="#F59E0B" data-rgb="245,158,11">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
+      </div>
+      <h2 class="s-head">내 채널 vs 경쟁, 빈 칸을 찾아라</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code 프롬프트] 경쟁 채널들이 다 다루는데 내 채널에서만 다루지 않은 내용을 알려주고, 내 브랜드에 맞게 기획안 만들어줘.</li><li class="pt pt-first" style="">[결과] ✓ 빈 칸(아무도 안 한 각도) 6개 = 선점 기회</li><li class="pt pt-first" style="">검증된 소재 + 빈 칸 = 안전하면서 차별적.</li></ul>
+      <footer class="s-cap">그리고 이런 것도 가끔 저는 쓰는데</footer>
+    </div>
+  </div>
+  <div class="s-counter">12<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-trans" data-idx="12" data-color="#EC4899" data-rgb="236,72,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
+      </div>
+      <h2 class="s-head">기획안 자동 작성</h2>
+      <p class="s-sub">브랜딩·성과·검증을 합쳐 4섹션 기획안을 한 번에 뽑는다.</p>
+      
+      <footer class="s-cap">그걸 가지고 우리가 기획안을 이제 작성을 하게 되겠죠</footer>
+    </div>
+  </div>
+  <div class="s-counter">13<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="13" data-color="#EC4899" data-rgb="236,72,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
+      </div>
+      <h2 class="s-head">기획안 전에 방향부터 확인</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#EC4899">[Claude Code 프롬프트] brand.md, 성과공식, 검증패턴 셋 다 읽고 다음 영상 주제 후보 10개 → 3개로 추려줘. 기획안 쓰기 전에 3개 방향(제목 축)부터 먼저 보여줘. 확인하고 진행할게.</li><li class="pt pt-first" style="">[결과] ✓ 3개 방향: 1) [축] 2) [축] 3) [축]</li><li class="pt pt-first" style="">여기서 한 번 끊으면, 다 쓴 뒤 갈아엎기를 막습니다.</li></ul>
+      <footer class="s-cap">이제 조립이 안 된다라는 말씀을 드렸었고</footer>
+    </div>
+  </div>
+  <div class="s-counter">14<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="14" data-color="#EC4899" data-rgb="236,72,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
+      </div>
+      <h2 class="s-head">기획안, 4섹션 자동 작성</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#EC4899">[Claude Code 프롬프트] 1번 방향으로 기획안 써줘. 썸네일·제목 후보 / 인트로 30초 대본 / 질문지 6개 / 검증 근거(레퍼런스·조회수)까지.</li><li class="pt pt-first" style="">[결과] ✓ 기획안_롱폼1.md 생성, 4섹션 + 검증 테이블</li><li class="pt pt-first" style="">&quot;OK&quot; 한마디면, 2·3·4번도 같은 방식으로.</li></ul>
+      <footer class="s-cap">그러니까 개발자가 이제 여기서부터 못 따라오는 영역이</footer>
+    </div>
+  </div>
+  <div class="s-counter">15<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="15" data-color="#EC4899" data-rgb="236,72,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
+      </div>
+      <h2 class="s-head">그냥 vs 검증 기반</h2>
+      <p class="s-sub">36 · TIP 4 · 기획안의 차이</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">[BEFORE] 3. 상세 기획, Top 4 (검증 6% 핵심)</li><li class="pt pt-first" style="">[BEFORE] 통플 1. 내 영상 10개 역산: 공통점 1가지 (메타 ★최우선)</li><li class="pt pt-first" style="">[BEFORE] 썸네일 예시: &#x27;내 영상 10개, 공통점 1개&#x27; / 서브: &#x27;감으로 찍는 시대는 끝났다&#x27;</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 1: 조회수 터진 내 영상 10개 역산했더니 공통점이 딱 1개</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 2: 감으로 찍는 시대는 끝났습니다 (제 채널 데이터 공개)</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 3: 65만 채널 상위 10개 영상의 숨은 규칙 1가지</li><li class="pt pt-first" style="">[BEFORE] 인트로 훅 (0~30초): 감으로 찍는 시대는 끝났습니다. 오늘은 제 채널에서 조회수가 터진 영상 10개를 그대로 갖고, 그 안에서 공통점 하나를 뽑아 보여드릴게요.</li><li class="pt pt-first" style="">[BEFORE] 본문 구조: ① 통낮 제거 ② 데이터 공개 (조회·CTR·구독전환) ③ 공통점 1가지 추출 ④ 역산 체크리스트 (4문항) ⑤ 마무리</li><li class="pt pt-first" style="">[BEFORE] 마무리: &#x27;오늘 당장 본인 채널 조회수 상위 5개만 뽑아서, 이 1가지가 들어있는지만 보면 됩니다.&#x27; → 다음 영상: 스튜디오 지표 (통풀 2)</li><li class="pt pt-first" style="">[AFTER] 통풀 1: 유튜브 0에서 시작, 딱 이 8단계 순서대로만</li><li class="pt pt-first" style="">[AFTER] 1. 예상 썸네일 및 제목</li><li class="pt pt-first" style="">[AFTER] 썸네일 메인 카피: &#x27;유튜브 시작, 딱 8단계&#x27; / 서브 카피: &#x27;이유지 말고 이 순서대로&#x27;</li><li class="pt pt-first" style="">[AFTER] 제목 후보 1: 유튜브 해야 하는데 미루고만 있다면, 딱 이 8단계를 순서대로만 하세요</li><li class="pt pt-first" style="">[AFTER] 제목 후보 2: 3년간 65만을 만들면서 유튜브 시작 8단계 (감 없이 시작하는 법)</li><li class="pt pt-first" style="">[AFTER] 제목 후보 3: 유튜브 채널이 해야 할지 모르겠다면, 이 순서가 전부입니다</li><li class="pt pt-first" style="">[AFTER] 2. 인트로 대본 (30초짜): 유튜브, 직장인 3대 하면이라는 말이 있을 만큼 시작이 어렵게 느껴지죠. 그런데 사실은 어려운 게 아니라, 뭐부터 해야 할지 순서를 몰라서 미루는 겁니다.</li><li class="pt pt-first" style="">[AFTER] 저는 3년 동안 채널 4개, 65만을 만들면서 늘 똑같은 순서를 적용해 왔어요. 오늘은 그 시작 8단계를 하나도 빠짐없이, 그대로 따라 할 수 있게 풀어드릴게요.</li><li class="pt pt-first" style="">[AFTER] 3. 질문지 &amp; 예상 답변 방향</li><li class="pt pt-first" style="">[AFTER] Q1. 유튜브 시작이 왜 이렇게 어렵게 느껴질까요? → 질문 의도: 잠김·미루는 시청자 공감 (돈은 아니라 순서 문제) / 답변 골격: 순서가 아니라 뭐부터 해야 할지 감이 없어서 → 감으로 준비 3일 만에 포기 → 이 순서만 있으면 누구나 시작</li><li class="pt pt-first" style="">[AFTER] Q2. 첫 단계, 주제는 어떻게 정하나요? (통낮 빈칸) → 질문 의도: &#x27;새 아이디어나 블루오션 찾기&#x27;를 기원 반박 / 답변 골격: 블루오션 찾지 마라 → 수요 있는 레드오션에서 → 경쟁 값이 보여도 꾸준히 하는 사람을</li><li class="pt pt-first" style="">[AFTER] Q3. 레퍼런스 채널은 왜, 어떻게 찾나요? (★ 핵심) → 질문 의도: 레퍼런스 30개 구독으로 알고리즘 트레킹 학습 / 답변 골격: 레퍼런스 = 나침반 → 검색해서 상위권 좋은 채널 30개 구독</li><li class="pt pt-first" style="">[AFTER] Q4. 잘되는 채널에서 뭘 봐야 하나요? (공통점=공식) → 질문 의도: 공통점 분석·채널 구조 공통점 추출 / 답변 골격: 같은 얼마도 구조와 공통점 → 썸네일·문제 채크·키워드·대본 흐름 정리</li><li class="pt pt-first" style="">[AFTER] Q5. 그래서 영상은 어떤 순서로 만드나요? (썸네일 먼저) → 질문 의도: 제작 순서 - 썸네일 → 대본 → 촬영 / 답변 골격: 썸네일 먼저(영상 흐름 결정) → 썸네일 기반 대본 → 100% 대본 후 촬영</li><li class="pt pt-first" style="">[AFTER] Q6. (보조) 오늘 당장 1단계로 뭘 하면 도움이 될까요? → 답변 가이드: &#x27;오늘은 딱 1단계만, 내가 다를 레드오션 주제 하나 정하고, 잘되는 채널 5개만...&#x27;</li></ul>
+      <footer class="s-cap">그냥 쪽 해 가지고 기획안 만들어 줘 한 거고요 / 이제 좀 기획안이 좀 달라집니다 / 늘 똑같은 순서를 적용을 해 왔습니다</footer>
+    </div>
+  </div>
+  <div class="s-counter">16<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-trans" data-idx="16" data-color="#8B5CF6" data-rgb="139,92,246">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5 · 대본</span>
+      </div>
+      <h2 class="s-head">매번, 백지에서 대본을 쓴다</h2>
+      <p class="s-sub">38 · TIP 5 · 문제</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">[흔한 방식 — BEFORE] 매번 처음부터</li><li class="pt pt-first" style="">&#x27;오늘은 어떻게 시작하지...&#x27;, 톤도 구성도 들쭉날쭉</li><li class="pt pt-first" style="">결과: 잘된 영상의 흐름이 재현되지 않음.</li><li class="pt pt-first" style="">[TIP 5 — AFTER] 내, 대본 골격을 추출</li><li class="pt pt-first" style="">&#x27;내 잘된 영상들의 공통 구조&#x27;를 뽑아, 매번 그 위에서 쓴다</li><li class="pt pt-first" style="">결과: 시청 지속률이 구조로 안정된다.</li></ul>
+      <footer class="s-cap">거기에서 또 대본을 이어가실 분들도 많긴 하지만</footer>
+    </div>
+  </div>
+  <div class="s-counter">17<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-title" data-idx="17" data-color="#06B6D4" data-rgb="6,182,212">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
+      </div>
+      <h2 class="s-head">썸네일·제목
+카피</h2>
+      <p class="s-sub">상위 썸네일 170여 개에서 뽑은 18 구조로 클릭을 만든다.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">TIP 6 · COPY</li><li class="pt pt-first" style="">상위 썸네일 170여 개에서 뽑은 18 구조로 클릭을 만든다.</li></ul>
+      <footer class="s-cap">늘 이제 제일 어려워하는 게 썸네일 제목이에요</footer>
+    </div>
+  </div>
+  <div class="s-counter">18<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="18" data-color="#06B6D4" data-rgb="6,182,212">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
+      </div>
+      <h2 class="s-head">클릭 카피 = 5대 심리 카테고리</h2>
+      <p class="s-sub">43 · TIP 6 · 클릭 카피 5×18</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">A · 손실·공포: 금기 경고·후회 예방·기관 은폐</li><li class="pt pt-first" style="">B · 호기심·은폐: 지시대명사·질문/자문·무지 폭로</li><li class="pt pt-first" style="">C · 권위·증거: 내부자 폭로·수치/과학·직접 실험</li><li class="pt pt-first" style="">D · 효율·이득: 숫자 한정·시간 축효·조지가·논높이·시스템</li><li class="pt pt-first" style="">E · 욕망·정체성: 변신/되는법·특징/징조·단일 해결·대안 지시</li><li class="pt pt-first" style="">상위 썸네일 170여 개 분석 → 18구조로 압축. 빈칸만 내 주제로.</li></ul>
+      <footer class="s-cap">그 추출한 이 파일 양식을 제가 드릴게요</footer>
+    </div>
+  </div>
+  <div class="s-counter">19<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="19" data-color="#06B6D4" data-rgb="6,182,212">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
+      </div>
+      <h2 class="s-head">검증된 20가지 카피 구조</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">숫자 한정형 — &#x27;한국 ETF 3개로 평생 월급&#x27;</li><li class="pt pt-first" style="">지시대명사 은폐 — &#x27;핸드드립 이것 알고나니&#x27;</li><li class="pt pt-first" style="">내부자 폭로 — &#x27;7년차 시공자가 폭로하는 태양광 사기&#x27;</li><li class="pt pt-first" style="">Before→After — &#x27;151M → 198M 비거리&#x27;</li><li class="pt pt-first" style="">금기 경고 — &#x27;이것 켜두면 도청, 지금 꺼두세요&#x27;</li><li class="pt pt-first" style="">비밀 공개 — &#x27;사장님이 알리지 말라던 레시피&#x27;</li><li class="pt pt-first" style="">통념 부정 — &#x27;무작정 걷지 마세요&#x27;</li><li class="pt pt-first" style="">직접 검증 — &#x27;4년간 계란 매일 5개씩 먹었더니&#x27;</li><li class="pt pt-first" style="">의외성 반전 — &#x27;이이없네요 너무 쉽잖아&#x27;</li><li class="pt pt-first" style="">소수 특권 — &#x27;99%는 모르는 제미나이 기능&#x27;</li><li class="pt pt-first" style="">변신·되는 법 — &#x27;유리멘탈도 빼집니다&#x27;</li><li class="pt pt-first" style="">대안 지시 — &#x27;스케일링 말고 이거 하세요&#x27;</li><li class="pt pt-first" style="">시간 즉효 — &#x27;변기수압 3초 만에 해결&#x27;</li><li class="pt pt-first" style="">눈높이 보장 — &#x27;5살도 이해하는 ETF&#x27;</li><li class="pt pt-first" style="">질문·자문형 — &#x27;난 왜 이렇게 안 빠져?&#x27;</li><li class="pt pt-first" style="">기관 은폐 — &#x27;보험사는 절대 말 안합니다&#x27;</li><li class="pt pt-first" style="">특징·정조 — &#x27;그릇 큰 사람들의 특징 5가지&#x27;</li><li class="pt pt-first" style="">후회 예방 — &#x27;1억 날리고 후회하는 7가지&#x27;</li><li class="pt pt-first" style="">vs 대결 — &#x27;복리의 마법 vs 통장 0원&#x27;</li><li class="pt pt-first" style="">랭킹·TOP — &#x27;2026 런닝화 TOP4&#x27;</li><li class="pt pt-first" style="">하단 설명: 실제 상위 썸네일 1700여 개에서 추출. 빈칸 내 주제로.</li></ul>
+      <footer class="s-cap">이 파일을 공유를 드릴 거예요</footer>
+    </div>
+  </div>
+  <div class="s-counter">20<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="20" data-color="#06B6D4" data-rgb="6,182,212">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
+      </div>
+      <h2 class="s-head">문구 → 이미지까지 연결</h2>
+      <p class="s-sub">고른 문구를 이미지 생성·캔바로</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">확정된 썸네일 문구 + 컨셉(배경·인물 배치·색)을 클로드에게 정리시켜 이미지 생성 도구나 캔바 작업 지시서로 바로 넘깁니다.</li><li class="pt pt-first" style="">절대, 1개만 만들고 끝내지 않기. 30개 중 2개가 정석.</li></ul>
+      <footer class="s-cap">초안까지도 클로드 코드가 그러니까 쉽게 얘기하면</footer>
+    </div>
+  </div>
+  <div class="s-counter">21<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="21" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
+      </div>
+      <h2 class="s-head">후반작업에 시간을 다 쓴다</h2>
+      <p class="s-sub">무음 자르기 · 군더더기 제거 · 자막, 손으로</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">촬영보다 편집이 몇 배 더 걸립니다. 그런데 그 일의 대부분은 규칙이 명확한 반복 작업입니다. 규칙이 있으면, 자동화됩니다.</li><li class="pt pt-first" style="">자막·무음 컷, 클로드 + 무료 도구로 자동.</li></ul>
+      <footer class="s-cap">우리 뭐 무음 구간이라든지 말 더듬는 것들 있죠</footer>
+    </div>
+  </div>
+  <div class="s-counter">22<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="22" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
+      </div>
+      <h2 class="s-head">음성 → 자막 자동 생성</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">[Claude Code Desktop 프롬프트] {영상.mp4 경로}의 음성을 Whisper로 분석해서 자막 만들어줘.</li><li class="pt pt-first" style="">한 줄 25~35자로 작성하되, 단순 글자수가 아니라 맥락·내용 단위로 끊어서 만들어줘.</li><li class="pt pt-first" style="">결과: subtitle.srt 생성, 한 줄 25~35자 · 맥락 단위 컷</li><li class="pt pt-first" style="">편집 프로그램에 그대로 불러오면 끝</li><li class="pt pt-first" style="">받아쓰기, 0분. 무료 모델로.</li></ul>
+      <footer class="s-cap">그리고 실제 브루에서 돌리는 엔진이 위스퍼 엔진이거든요</footer>
+    </div>
+  </div>
+  <div class="s-counter">23<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="23" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+      </div>
+      <h2 class="s-head">음성 → 자막 자동 생성</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">[Claude Code Desktop 프롬프트] 이 자막 타임코드 보고, 무음 구간이랑 &#x27;어... 음...&#x27; 같은 군더더기 구간을 찾아서 잘라낼 구간 목록(타임코드)으로 정리해줘.</li><li class="pt pt-first" style="">✓ cut_list.txt, 잘라낼 구간 42곳</li><li class="pt pt-first" style="">편집 프로그램에서 그대로 컷</li><li class="pt pt-first" style="">규칙이 있는 일은 전부 자동화 후보입니다.</li></ul>
+      <footer class="s-cap">이 방식으로 이제 자막을</footer>
+    </div>
+  </div>
+  <div class="s-counter">24<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="24" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
+      </div>
+      <h2 class="s-head">후반작업, 시간 단축</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">컷편집+자막작업 (1편): 5~6시간 [빨간 긴 바]</li><li class="pt pt-first" style="">자동화 후 (1편): 30분 [파란 짧은 바]</li><li class="pt pt-first" style="">남은 시간은 기획·소통처럼 사람만 할 수 있는 일에.</li></ul>
+      <footer class="s-cap">자막만 검수하고 다는 데 진짜 다 여섯 시간 걸리거든요</footer>
+    </div>
+  </div>
+  <div class="s-counter">25<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="25" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+      </div>
+      <h2 class="s-head">후반작업, 시간 단축</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">컷편집+자막작업 (1편): 5~6시간 (빨간 막대)</li><li class="pt pt-first" style="">자동화 후 (1편): 30분 (파란 막대)</li><li class="pt pt-first" style="">남은 시간은 기획·소통처럼 사람만 할 수 있는 일에.</li></ul>
+      <footer class="s-cap">그러니까 직문직설이 그렇게 막 두려움이 없고</footer>
+    </div>
+  </div>
+  <div class="s-counter">26<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="26" data-color="#F97316" data-rgb="249,115,22">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+      </div>
+      <h2 class="s-head">자막, 다국어로 한 번에</h2>
+      
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">Claude Code Desktop 프롬프트: subtitle.srt를 영어·일본어로 번역해서 각각 .srt로 저장해줘. 타임코드 그대로.</li><li class="pt pt-first" style="">출력 결과: subtitle_en.srt · subtitle_ja.srt</li><li class="pt pt-first" style="">유튜브 스튜디오 → 자막 → 언어 추가에서, AI가 만든 다국어 자막을 그대로 입력하면 끝.</li><li class="pt pt-first" style="">YouTube Studio UI 우측 패널: 영어(미국) / 제목: I grew my YouTube channel really fast by doing this. / 설명: Channels with stalled view counts can be unlocked simply by fixing their YouTube thumbnails and titles.</li></ul>
+      <footer class="s-cap">각각 SRT로 저장해 달라라고 하면</footer>
+    </div>
+  </div>
+  <div class="s-counter">27<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-trans" data-idx="27" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">쇼츠 + SEO</h2>
+      <p class="s-sub">롱폼 1편을 쇼츠 여러 개와 검색 노출로 확장한다.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">TIP 8 · GROW. (파란 배너)</li></ul>
+      <footer class="s-cap">그러고 나서 이제 여덟 번째가 아이디어죠</footer>
+    </div>
+  </div>
+  <div class="s-counter">28<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="28" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">롱폼, 1편으로 끝</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">[흔한 방식 ✗] 업로드하고, 끝 — 한 편 만드는 데 며칠 → 노출은 한 번 / 결과: 들인 노력 대비, 도달이 적음.</li><li class="pt pt-first" style="">[TIP 8 ✓] 1편 → 쇼츠 5개 + SEO — 같은 대본에서 쇼츠·설명란·태그를 한 번에 / 결과: 한 번의 제작, 여러 번의 노출.</li></ul>
+      <footer class="s-cap">예전에는 도반처럼 해서 이게 이걸 계속 주입하고</footer>
+    </div>
+  </div>
+  <div class="s-counter">29<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="29" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">롱폼 대본 → 쇼츠 후보 분해</h2>
+      <p class="s-sub">S6 · TIP 8 · 방법 ① · 쇼츠</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 이 롱폼 대본에서 독립적으로 터질 만한 영상 길이에 맞게 쇼츠 구간 뽑아줘 (15분 기준 5개 이상). 각 첫 3초 훅, 세로 자막용 한 줄 카피, 추천 길이까지.</li><li class="pt pt-first" style="">✓ 쇼츠 5~7개, 타임코드 + 훅 + 세로 자막 카피</li><li class="pt pt-first" style="">한 번 찍어, 열 편 넘게 발행.</li></ul>
+      <footer class="s-cap">세로형 자막 있잖아요</footer>
+    </div>
+  </div>
+  <div class="s-counter">30<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="30" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">설명란·태그·챕터, 한 번에</h2>
+      <p class="s-sub">S7 · TIP 8 · 방법 ② · SEO</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 이 영상, 검색 잘 되게 설명란 작성해줘.</li><li class="pt pt-first" style="">- 첫 2줄에 핵심 키워드</li><li class="pt pt-first" style="">- 챕터 타임스탬프 (자막 기반)</li><li class="pt pt-first" style="">- 태그 5개 / 고정 댓글 1개</li><li class="pt pt-first" style="">✓ description.txt, 복붙만 하면 끝</li><li class="pt pt-first" style="">매번 귀찮아 미루던 일이 30초.</li></ul>
+      <footer class="s-cap">그러니까 영상을 하나 경로 집어넣고</footer>
+    </div>
+  </div>
+  <div class="s-counter">31<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="31" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">1편의 제작 → 여러 채널 노출</h2>
+      <p class="s-sub">같은 노력, 도달은 몇 배로.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">본편: 1편</li><li class="pt pt-first" style="">쇼츠: 10편+ · 추가 유입</li><li class="pt pt-first" style="">SEO: 설명·태그·챕터 · 검색 노출</li></ul>
+      <footer class="s-cap">이제 추가 유입을 만들자라고 하고</footer>
+    </div>
+  </div>
+  <div class="s-counter">32<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="32" data-color="#60A5FA" data-rgb="96,165,250">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+      </div>
+      <h2 class="s-head">쇼츠 5개, 발행 캘린더로 분산</h2>
+      <p class="s-sub">한 번 만든 콘텐츠가 2주 내내 유입을 만든다.</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 쇼츠 10여 개를 본편 발행 후 2~3주에 걸쳐 분산 발행하는 캘린더로 짜줘. 요일·시간까지.</li><li class="pt pt-first" style="">✓ 발행 캘린더, 본편 + 쇼츠 10여 개 일정</li></ul>
+      <footer class="s-cap">마찬가지로 업로드 해 둘 테니까 쓰실 수 있게</footer>
+    </div>
+  </div>
+  <div class="s-counter">33<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="33" data-color="#F43F5E" data-rgb="244,63,94">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(244,63,94,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(244,63,94,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#F43F5E;background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.3)">TIP 9 · 노션</span>
+      </div>
+      <h2 class="s-head">진행 상황, 한눈에</h2>
+      <p class="s-sub">한 영상 = 한 카드. 진행되면, 열 칸으로.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F43F5E">아이디어(3): 시청자가 모르는 OO(롱폼), 검증 패턴 5가지(쇼츠)</li><li class="pt pt-first" style="">기획(2): 롱폼 1·&#x27;1년 전 저는&#x27;(검증 OK), 롱폼 2(검증 中)</li><li class="pt pt-first" style="">촬영·편집(2): 롱폼 3(자막 완료), 쇼츠 #14(첫 완료)</li><li class="pt pt-first" style="">발행(1): 롱폼 4·&#x27;이것만 바꾸면&#x27;(21,070회)</li></ul>
+      <footer class="s-cap">노션에 알아서 정리를 해준다 라는 거고요</footer>
+    </div>
+  </div>
+  <div class="s-counter">34<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="34" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">07 · 오해 정리</span>
+      </div>
+      <h2 class="s-head">하지 말아야 할 것</h2>
+      <p class="s-sub">딱 하나, 따라 하기만 하면 됩니다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">SKIP 01 · 프롬프트 공부 — 한국말로 시키면 끝</li><li class="pt pt-first" style="">SKIP 02 · 비싼 AI 강의 — 만져보는 게 더 빠름</li><li class="pt pt-first" style="">SKIP 03 · 완벽한 양식 — 폴더 하나면 충분</li><li class="pt pt-first" style="">SKIP 04 · 도구 10개 구독 — 클로드 + 노션이면 90%</li></ul>
+      <footer class="s-cap">지금 뭐 슬림 보고 계실 텐데</footer>
+    </div>
+  </div>
+  <div class="s-counter">35<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="35" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">05 · 오늘 쓰는 도구</span>
+      </div>
+      <h2 class="s-head">오늘은 이 도구들을 활용합니다</h2>
+      <p class="s-sub">중심은 Claude. 나머지는 그 결과물을 받는 곳입니다.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">Claude — 기획·대본·분석·자동화</li><li class="pt pt-first" style="">YouTube — 채널·쇼츠·SEO</li><li class="pt pt-first" style="">Notion — 제작 파이프라인</li><li class="pt pt-first" style="">Whisper — 자막·다국어</li><li class="pt pt-first" style="">iOS — 일상 비서 연동</li></ul>
+      <footer class="s-cap">제가 광고도 당연히 아니고 필요할 것 같아서</footer>
+    </div>
+  </div>
+  <div class="s-counter">36<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="36" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">06 · 오늘의 약속</span>
+      </div>
+      <h2 class="s-head">한 시간 뒤, 이 9가지를 손에 넣습니다</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">TIP 1 · 채널 정보 → 브랜딩 문서 — 정체성·USP·금기를 한 문서로</li><li class="pt pt-first" style="">TIP 2 · 내 주제 리서치 + 성과분석 — 잘된 영상의 공식 도출</li><li class="pt pt-first" style="">TIP 3 · 경쟁·레퍼런스 채널 분석 — 평균 대비 배수 = 진짜 신호</li><li class="pt pt-first" style="">TIP 4 · 기획안 자동 작성 — 주제 검증 → 4섹션 기획안</li><li class="pt pt-first" style="">TIP 5 · 대본 골격 + 몰입형 대본 — 내 잘된 대본의 공통 골격</li><li class="pt pt-first" style="">TIP 6 · 썸네일·제목 대량 + 검증 — 30개 중 A/B 2조</li><li class="pt pt-first" style="">TIP 7 · 컷편집 + 다국어 자막 — 후반작업 시간 단축</li><li class="pt pt-first" style="">TIP 8 · 롱폼 → 쇼츠 + SEO — 노출 극대화</li><li class="pt pt-first" style="">TIP 9 · 노션 연동·파이프라인 자동화 — 흩어진 8가지를 하나의 시스템으로</li></ul>
+      <footer class="s-cap">그래서 첫 번째는 이제 오늘 할 거는</footer>
+    </div>
+  </div>
+  <div class="s-counter">37<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="37" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+      </div>
+      <h2 class="s-head">[콘텐츠] 후보 찾는 법</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">슬라이드 텍스트 일부만 화면 좌측에 노출 — 전체 내용 미확인</li></ul>
+      <footer class="s-cap">뭐 그러면 CCTV를 켜 가지고</footer>
+    </div>
+  </div>
+  <div class="s-counter">38<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="38" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+      </div>
+      <h2 class="s-head">[AI 덕분에 일이] 점 쉬워집니다. 문제를 정의하는 능력이 중요합니다</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">화면 좌측에 파란 하이라이트 박스로 핵심 문장 강조 표시</li><li class="pt pt-first" style="">슬라이드 우측 및 상단은 화각 밖으로 잘려 내용 미확인</li></ul>
+      <footer class="s-cap">해결하는 법을 알아서 문제를 해결해 주는 것보다</footer>
+    </div>
+  </div>
+  <div class="s-counter">39<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="39" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+      </div>
+      <h2 class="s-head">getdesign.md — 디자인 시스템 레퍼런스 사이트</h2>
+      <p class="s-sub">The first DESIGN.md collection in the ecosystem</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#6B7280">AI &amp; LLM Platforms, Developer Tools, Backend 등 75개 카테고리 디자인 분석</li><li class="pt pt-first" style="">BMW M, Dell, Nintendo, Airbnb, Apple, Binance, Ferrari 등 브랜드 수록</li><li class="pt pt-first" style="">각 브랜드의 디자인 시스템을 DESIGN.md 포맷 텍스트로 제공</li></ul>
+      <footer class="s-cap">실제로 이렇게 봤을 때 뭐 보면은</footer>
+    </div>
+  </div>
+  <div class="s-counter">40<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-demo" data-idx="40" data-color="#6B7280" data-rgb="107,114,128">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+      </div>
+      <h2 class="s-head">getdesign.md/ferrari — DESIGN.md 코드 그대로 복사</h2>
+      <p class="s-sub">Design System Analysis: Ferrari — 전체 팔레트·타이포·spacing 규격 포함</p>
+      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#6B7280">colors: primary #da291c, canvas #181818, ink #ffffff 등 전체 팔레트 코드</li><li class="pt pt-first" style="">typography / spacing / semantic 색상 포함된 YAML 구조</li><li class="pt pt-first" style="">&#x27;Copied!&#x27; 버튼으로 클립보드 복사 → Claude 프롬프트에 바로 붙여넣기</li></ul>
+      <footer class="s-cap">이걸 그냥 복사하세요</footer>
+    </div>
+  </div>
+  <div class="s-counter">41<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="41" data-color="#34D399" data-rgb="52,211,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">보너스 · 일상 비서</span>
+      </div>
+      <h2 class="s-head">눈 뜨자마자, 음성 브리핑</h2>
+      <p class="s-sub">읽기 귀찮으면, 말로. 일정 수정도 말 한마디면 끝.</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">① 일정·할 일 (SCHEDULE): 오늘 캘린더·미리알림 정리.</li><li class="pt pt-first" style="">② 주요 뉴스 3 (NEWS): 오늘의 핵심 뉴스 3가지.</li><li class="pt pt-first" style="">③ 안 읽은 알림 요약 (INBOX): 밤사이 온 중요 메일...</li></ul>
+      <footer class="s-cap">저는 첫 번째는 이제 일정하고 할 일 관리하는 거</footer>
+    </div>
+  </div>
+  <div class="s-counter">42<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-content" data-idx="42" data-color="#34D399" data-rgb="52,211,153">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS · 스킬, 3단계면 끝</span>
+      </div>
+      <h2 class="s-head">스킬 만들기, 딱 3단계</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">STEP 1 — 충분히 대화한 뒤, 스킬 생성 (내 의도를 다 전달한 다음에)</li><li class="pt pt-first" style="">STEP 2 — 테스트 결과물 먼저 요청 (말투·디테일을 잡고 나서)</li><li class="pt pt-first" style="">STEP 3 — 결과물 피드백 → 반복 (마음에 들 때까지 수정)</li></ul>
+      <footer class="s-cap">이제 그다음부터는 그냥 아침에 오늘 일정 브리핑해줘</footer>
+    </div>
+  </div>
+  <div class="s-counter">43<span class="s-total"> / 44</span></div>
+</section>
+<section class="slide sl-trans" data-idx="43" data-color="#94A3B8" data-rgb="148,163,184">
+  <!-- Ambient blobs -->
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(148,163,184,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(148,163,184,.08) 0%,transparent 65%)"></div>
+  <!-- Glass card -->
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#94A3B8;background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.3)">클로징 · 앞으로</span>
+      </div>
+      <h2 class="s-head">사실, 오늘 배운 9가지는 전부 한 가지 사고법이었습니다.</h2>
+      <p class="s-sub">클로징 · 앞으로 클로드를 어떻게 쓸 것인가</p>
+      
+      <footer class="s-cap">좋은 도움이 될 것 같아서 공유를 드리고요</footer>
+    </div>
+  </div>
+  <div class="s-counter">44<span class="s-total"> / 44</span></div>
+</section>
+</div>
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" aria-label="이전 슬라이드">&#8592;</button>
+  <button class="nav-btn" id="btn-next" aria-label="다음 슬라이드">&#8594;</button>
+</div>
+<div id="hint">
+  <span class="kbd">←</span>
+  <span class="kbd">→</span>
+  <span style="color:rgba(255,255,255,.15);padding:0 2px">·</span>
+  <span class="kbd">Space</span>
+</div>
+<script>
+const LABELS  = ["TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 5 · 대본", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 7 · 첫편집·자막", "TIP 7 · 첫편집·자막", "TIP 7 · 컷편집·자막", "TIP 7 · 첫편집·자막", "TIP 7 · 컷편집·자막", "TIP 7 · 컷편집·자막", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 9 · 노션", "07 · 오해 정리", "05 · 오늘 쓰는 도구", "06 · 오늘의 약속", "", "", "", "", "보너스 · 일상 비서", "BONUS · 스킬, 3단계면 끝", "클로징 · 앞으로"];
+const COLORS  = ["#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#F59E0B", "#F59E0B", "#F59E0B", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#8B5CF6", "#06B6D4", "#06B6D4", "#06B6D4", "#06B6D4", "#F97316", "#F97316", "#F97316", "#F97316", "#F97316", "#F97316", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#F43F5E", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#34D399", "#34D399", "#94A3B8"];
+const slides  = Array.from(document.querySelectorAll('.slide'));
+const dotsEl  = document.getElementById('dots');
+const pbar    = document.getElementById('pbar');
+let cur = 0;
+let transitioning = false;
+
+// ── Dots ──────────────────────────────────────────
+slides.forEach((_,i)=>{
+  const d = document.createElement('div');
+  d.className='dot';
+  d.title = LABELS[i] || '';
+  d.onclick = ()=> go(i);
+  dotsEl.appendChild(d);
+});
+const dotEls = Array.from(document.querySelectorAll('.dot'));
+
+function applyColor(color){
+  pbar.style.background = color;
+  pbar.style.color      = color;   // for ::after glow
+  dotEls.forEach((d,i)=>{
+    d.style.background = i===cur ? color : '';
+  });
+}
+
+function go(n){
+  if(transitioning) return;
+  n = Math.max(0, Math.min(n, slides.length-1));
+  if(n===cur) return;
+  transitioning = true;
+
+  const prev = cur;
+  slides[prev].classList.remove('active');
+  slides[prev].classList.add('exit');
+  setTimeout(()=>slides[prev].classList.remove('exit'), 450);
+
+  cur = n;
+  slides[cur].classList.add('active');
+
+  pbar.style.width = ((cur+1)/slides.length*100)+'%';
+  applyColor(COLORS[cur]);
+  dotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));
+  dotEls[cur]?.scrollIntoView({block:'nearest',inline:'center'});
+
+  setTimeout(()=>{ transitioning=false; }, 450);
+}
+
+// ── Init ──────────────────────────────────────────
+slides[0].classList.add('active');
+pbar.style.width = (1/slides.length*100)+'%';
+dotEls[0]?.classList.add('active');
+applyColor(COLORS[0]);
+
+// ── Controls ──────────────────────────────────────
+document.getElementById('btn-prev').onclick = ()=>go(cur-1);
+document.getElementById('btn-next').onclick = ()=>go(cur+1);
+
+document.addEventListener('keydown', e=>{
+  if(['ArrowRight',' ','Enter'].includes(e.key)){ e.preventDefault(); go(cur+1); }
+  if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
+  if(e.key==='Home') go(0);
+  if(e.key==='End')  go(slides.length-1);
+});
+
+// ── Swipe ─────────────────────────────────────────
+let sx=0, sy=0;
+document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=sx-e.changedTouches[0].clientX;
+  const dy=Math.abs(sy-e.changedTouches[0].clientY);
+  if(Math.abs(dx)>44 && dy<40) go(dx>0?cur+1:cur-1);
+});
+</script>
+</body>
+</html>
