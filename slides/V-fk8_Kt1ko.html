@@ -3,1136 +3,1092 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Claude Code × 유튜브 자동화 — 강의 슬라이드</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
+<title>경계를 넘은 과학자들 — 언더스탠딩</title>
 <style>
-/* ─ Reset ─────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-/* ─ Design tokens (Modern Dark Cinema) ─────────────── */
 :root{
-  --bg-deep:    #020203;
-  --bg-base:    #050506;
-  --bg-elevated:#0a0a0c;
-  --surface:    rgba(255 255 255 / .04);
-  --surface-hi: rgba(255 255 255 / .07);
-  --fg:         #EDEDEF;
-  --fg-muted:   #8A8F98;
-  --border:     rgba(255 255 255 / .08);
-  --radius:     16px;
-  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
-  --dur:        420ms;
-  font-family: 'Inter', -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  --bg:#020203;--fg:#EDEDEF;--fg-muted:#8A8F98;
+  --surface:rgba(255 255 255/.04);--surface-hi:rgba(255 255 255/.07);
+  --border:rgba(255 255 255/.08);--radius:16px;
+  --ease:cubic-bezier(.16,1,.3,1);--dur:400ms;
+  font-family:-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;
 }
-
-html,body{
-  height:100%;
-  background:linear-gradient(160deg,#0a0a0f 0%,var(--bg-deep) 100%);
-  color:var(--fg);
-  overflow:hidden;
-}
-
-/* ─ Progress bar ──────────────────────────────────── */
-#pbar{
-  position:fixed;top:0;left:0;height:2px;z-index:300;
-  transition:width var(--dur) var(--ease), background .6s var(--ease);
-  filter:blur(0.5px);
-}
-#pbar::after{
-  content:'';position:absolute;inset:0;
-  box-shadow:0 0 12px currentColor, 0 0 4px currentColor;
-  background:inherit;
-}
-
-/* ─ Dots ──────────────────────────────────────────── */
-#dots{
-  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-  display:flex;gap:5px;align-items:center;z-index:300;
-  max-width:80vw;flex-wrap:wrap;justify-content:center;
-}
-.dot{
-  width:5px;height:5px;border-radius:50%;
-  background:rgba(255 255 255 / .18);cursor:pointer;
-  transition:transform .25s var(--ease), background .3s;
-  position:relative;
-}
-.dot.active{transform:scale(1.7)}
-
-/* ─ Deck ──────────────────────────────────────────── */
-#deck{width:100vw;height:100vh;position:relative;overflow:hidden}
-
-/* ─ Slide ─────────────────────────────────────────── */
-.slide{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  padding:48px 64px 80px;
-  opacity:0;pointer-events:none;
-  transform:translateX(32px) scale(.985);
-  transition:opacity var(--dur) var(--ease),
-             transform var(--dur) var(--ease);
-  will-change:opacity,transform;
-}
-.slide.active{
-  opacity:1;pointer-events:auto;
-  transform:translateX(0) scale(1);
-}
-.slide.exit{
-  opacity:0;transform:translateX(-32px) scale(.985);
-  pointer-events:none;
-}
-
-/* Ambient blobs */
-.blob{
-  position:absolute;pointer-events:none;
-  border-radius:50%;filter:blur(48px);
-  will-change:transform;
-}
-.blob-a{
-  width:55vw;height:55vw;
-  top:-10%;left:-15%;
-  animation:drift-a 12s ease-in-out infinite;
-}
-.blob-b{
-  width:40vw;height:40vw;
-  bottom:5%;right:-10%;
-  animation:drift-b 16s ease-in-out infinite;
-}
-@keyframes drift-a{
-  0%,100%{transform:translate(0,0)}
-  50%{transform:translate(6%,5%)}
-}
-@keyframes drift-b{
-  0%,100%{transform:translate(0,0)}
-  50%{transform:translate(-5%,-6%)}
-}
-
-/* ─ Glass card ────────────────────────────────────── */
-.glass-card{
-  position:relative;z-index:1;
-  width:100%;max-width:960px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:52px 60px;
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  box-shadow:0 1px 0 rgba(255 255 255 / .06) inset,
-             0 32px 80px rgba(0 0 0 / .6);
-  /* top-edge sheen */
-  background-image:linear-gradient(to bottom,rgba(255 255 255/.06) 0%,transparent 2px);
-}
-
-.s-inner{display:flex;flex-direction:column;gap:0}
-
-/* ─ Tag ───────────────────────────────────────────── */
-.s-tag-wrap{margin-bottom:18px}
-.s-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  padding:4px 12px;border-radius:20px;border:1px solid;
-  transition:background .3s,border-color .3s;
-}
-
-/* ─ Headline ──────────────────────────────────────── */
-.s-head{
-  font-size:clamp(24px,3.8vw,52px);
-  font-weight:800;line-height:1.15;
-  letter-spacing:-.025em;
-  color:var(--fg);
-  margin-bottom:14px;
-  text-wrap:balance;
-}
-.sl-title .s-head{
-  font-size:clamp(34px,5.5vw,68px);
-  background:linear-gradient(140deg,#fff 40%,rgba(255,255,255,.45));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;
-}
-.sl-trans .s-head{
-  font-size:clamp(38px,6vw,74px);
-  font-weight:900;
-}
-
-/* ─ Sub ───────────────────────────────────────────── */
-.s-sub{
-  font-size:clamp(13px,1.5vw,18px);
-  color:var(--fg-muted);line-height:1.65;
-  margin-bottom:24px;font-weight:400;
-}
-
-/* ─ Points ────────────────────────────────────────── */
-.pts{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
-.pt{
-  font-size:clamp(12.5px,1.3vw,16px);
-  color:rgba(255 255 255 / .72);
-  line-height:1.6;
-  padding:10px 15px;
-  border-left:1.5px solid rgba(255 255 255 / .1);
-  background:rgba(255 255 255 / .03);
-  border-radius:0 8px 8px 0;
-  transition:border-color .2s;
-}
-.pt-first{
-  color:var(--fg);font-weight:500;
-  border-left-color:var(--pt-accent);
-  background:rgba(255 255 255 / .05);
-}
-.pt-mono{
-  font-family:'SF Mono','Fira Code',Consolas,monospace;
-  font-size:clamp(10.5px,1vw,13px);
-  background:rgba(0 10 30 / .5);
-  border-radius:8px;
-  color:#79B8FF;
-  border-left-width:2px;
-  white-space:pre-wrap;
-  letter-spacing:0;
-}
-
-/* ─ Caption ───────────────────────────────────────── */
-.s-cap{
-  margin-top:16px;padding-top:14px;
-  font-size:11.5px;color:rgba(255 255 255 / .28);
-  border-top:1px solid var(--border);
-  letter-spacing:.02em;
-}
-
-/* ─ Counter ───────────────────────────────────────── */
-.s-counter{
-  position:absolute;bottom:24px;right:40px;z-index:2;
-  font-size:11px;font-weight:600;
-  color:rgba(255 255 255 / .25);
-  font-variant-numeric:tabular-nums;
-  letter-spacing:.04em;
-}
-.s-total{font-weight:400;color:rgba(255 255 255 / .12)}
-
-/* ─ Nav arrows ────────────────────────────────────── */
-#nav{
-  position:fixed;top:50%;transform:translateY(-50%);
-  width:100%;z-index:300;pointer-events:none;
-  display:flex;justify-content:space-between;padding:0 12px;
-}
-.nav-btn{
-  pointer-events:auto;
-  width:38px;height:38px;border-radius:50%;
-  background:var(--surface-hi);
-  border:1px solid var(--border);
-  color:var(--fg-muted);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:15px;
-  opacity:.35;
-  transition:opacity .2s var(--ease), background .2s, transform .15s var(--ease);
-}
-.nav-btn:hover{background:rgba(255 255 255/.1);color:var(--fg);opacity:1}
-.nav-btn:active{transform:scale(.95)}
-
-/* ─ Kbd hint ──────────────────────────────────────── */
-#hint{
-  position:fixed;top:16px;right:20px;z-index:300;
-  display:flex;gap:5px;align-items:center;
-  opacity:.4;transition:opacity .2s;
-}
-#hint:hover{opacity:.9}
-.kbd{
-  background:rgba(255 255 255/.06);
-  border:1px solid var(--border);
-  font-size:10px;font-family:monospace;
-  padding:2px 6px;border-radius:4px;
-  color:var(--fg-muted);
-}
-
-/* ─ Reduced motion ────────────────────────────────── */
-@media (prefers-reduced-motion:reduce){
-  .slide{transition:opacity .15s}
-  .blob{animation:none}
-}
+html,body{height:100%;background:linear-gradient(160deg,#0a0a0f,#020203);color:var(--fg);overflow:hidden;}
+#pbar{position:fixed;top:0;left:0;height:3px;z-index:300;transition:width var(--dur) var(--ease),background .5s;}
+#pbar::after{content:'';position:absolute;inset:0;box-shadow:0 0 12px currentColor;background:inherit;}
+#dots{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;z-index:300;max-width:80vw;flex-wrap:wrap;justify-content:center;}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255 255 255/.18);cursor:pointer;transition:transform .25s var(--ease),background .3s;}
+.dot.active{transform:scale(1.7);}
+#deck{width:100vw;height:100vh;position:relative;overflow:hidden;}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:48px 64px 80px;
+  opacity:0;pointer-events:none;transform:translateX(32px) scale(.985);
+  transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease);}
+.slide.active{opacity:1;pointer-events:auto;transform:translateX(0) scale(1);}
+.slide.exit{opacity:0;transform:translateX(-32px) scale(.985);pointer-events:none;}
+.blob{position:absolute;pointer-events:none;border-radius:50%;filter:blur(60px);}
+.blob-a{width:55vw;height:55vw;top:-10%;left:-15%;animation:da 14s ease-in-out infinite;}
+.blob-b{width:40vw;height:40vw;bottom:5%;right:-10%;animation:db 18s ease-in-out infinite;}
+@keyframes da{0%,100%{transform:translate(0,0)}50%{transform:translate(6%,5%)}}
+@keyframes db{0%,100%{transform:translate(0,0)}50%{transform:translate(-5%,-6%)}}
+.glass-card{position:relative;z-index:1;width:100%;max-width:980px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:48px 56px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 1px 0 rgba(255 255 255/.06) inset,0 32px 80px rgba(0 0 0/.6);
+  background-image:linear-gradient(to bottom,rgba(255 255 255/.05) 0%,transparent 2px);}
+.s-inner{display:flex;flex-direction:column;gap:0;}
+.s-tag-wrap{margin-bottom:16px;}
+.s-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid;}
+.s-head{font-size:clamp(22px,3.5vw,50px);font-weight:800;line-height:1.15;letter-spacing:-.025em;color:var(--fg);margin-bottom:12px;text-wrap:balance;}
+.title .s-head{font-size:clamp(32px,5vw,64px);background:linear-gradient(140deg,#fff 40%,rgba(255,255,255,.45));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.s-sub{font-size:clamp(13px,1.4vw,17px);color:var(--fg-muted);line-height:1.65;margin-bottom:20px;}
+.pts{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.pt{font-size:clamp(12px,1.25vw,15.5px);color:rgba(255 255 255/.72);line-height:1.6;
+  padding:9px 14px;border-left:1.5px solid rgba(255 255 255/.1);background:rgba(255 255 255/.03);border-radius:0 8px 8px 0;}
+.pt-first{color:var(--fg);font-weight:500;border-left-color:var(--pt-accent);background:rgba(255 255 255/.05);}
+.s-quote{margin:12px 0;padding:20px 24px;border-left:3px solid;border-radius:0 12px 12px 0;background:rgba(255 255 255/.04);}
+.s-quote-text{font-size:clamp(14px,1.5vw,18px);font-style:italic;line-height:1.7;color:var(--fg);margin-bottom:8px;}
+.s-quote-author{font-size:11.5px;color:var(--fg-muted);font-style:normal;}
+.s-cap{margin-top:14px;padding-top:12px;font-size:11px;color:rgba(255 255 255/.28);border-top:1px solid var(--border);letter-spacing:.02em;}
+.s-counter{position:absolute;bottom:22px;right:36px;z-index:2;font-size:11px;font-weight:600;color:rgba(255 255 255/.25);font-variant-numeric:tabular-nums;}
+.s-total{font-weight:400;color:rgba(255 255 255/.12);}
+#nav{position:fixed;top:50%;transform:translateY(-50%);width:100%;z-index:300;pointer-events:none;display:flex;justify-content:space-between;padding:0 12px;}
+.nav-btn{pointer-events:auto;width:38px;height:38px;border-radius:50%;background:var(--surface-hi);border:1px solid var(--border);color:var(--fg-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;opacity:.3;transition:opacity .2s,background .2s,transform .15s;}
+.nav-btn:hover{background:rgba(255 255 255/.1);color:var(--fg);opacity:1;}
+.nav-btn:active{transform:scale(.95);}
+#hint{position:fixed;top:16px;right:20px;z-index:300;display:flex;gap:5px;align-items:center;opacity:.35;transition:opacity .2s;}
+#hint:hover{opacity:.9;}
+.kbd{background:rgba(255 255 255/.06);border:1px solid var(--border);font-size:10px;font-family:monospace;padding:2px 6px;border-radius:4px;color:var(--fg-muted);}
+@media(prefers-reduced-motion:reduce){.slide{transition:opacity .15s;} .blob{animation:none;}}
 </style>
 </head>
 <body>
 <div id="pbar"></div>
-<div id="dots"></div>
+<div id="dots"><span class="dot active" data-idx="0" title="INTRO"></span><span class="dot" data-idx="1" title="INTRO"></span><span class="dot" data-idx="2" title="INTRO"></span><span class="dot" data-idx="3" title="INTRO"></span><span class="dot" data-idx="4" title="피타고라스"></span><span class="dot" data-idx="5" title="피타고라스"></span><span class="dot" data-idx="6" title="피타고라스"></span><span class="dot" data-idx="7" title="피타고라스"></span><span class="dot" data-idx="8" title="피타고라스"></span><span class="dot" data-idx="9" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="10" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="11" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="12" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="13" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="14" title="코페르니쿠스 + 데카르트"></span><span class="dot" data-idx="15" title="케네"></span><span class="dot" data-idx="16" title="케네"></span><span class="dot" data-idx="17" title="케네"></span><span class="dot" data-idx="18" title="케네"></span><span class="dot" data-idx="19" title="케네"></span><span class="dot" data-idx="20" title="베르사이유 궁전"></span><span class="dot" data-idx="21" title="베르사이유 궁전"></span><span class="dot" data-idx="22" title="베르사이유 궁전"></span><span class="dot" data-idx="23" title="베르사이유 궁전"></span><span class="dot" data-idx="24" title="베르사이유 궁전"></span><span class="dot" data-idx="25" title="베르사이유 궁전"></span><span class="dot" data-idx="26" title="뉴턴"></span><span class="dot" data-idx="27" title="뉴턴"></span><span class="dot" data-idx="28" title="뉴턴"></span><span class="dot" data-idx="29" title="뉴턴"></span><span class="dot" data-idx="30" title="뉴턴"></span><span class="dot" data-idx="31" title="살롱과 계몽주의"></span><span class="dot" data-idx="32" title="살롱과 계몽주의"></span><span class="dot" data-idx="33" title="살롱과 계몽주의"></span><span class="dot" data-idx="34" title="살롱과 계몽주의"></span><span class="dot" data-idx="35" title="살롱과 계몽주의"></span><span class="dot" data-idx="36" title="1776년"></span><span class="dot" data-idx="37" title="1776년"></span><span class="dot" data-idx="38" title="1776년"></span><span class="dot" data-idx="39" title="1776년"></span><span class="dot" data-idx="40" title="1776년"></span><span class="dot" data-idx="41" title="루나 소사이어티 &amp; 결론"></span><span class="dot" data-idx="42" title="루나 소사이어티 &amp; 결론"></span><span class="dot" data-idx="43" title="루나 소사이어티 &amp; 결론"></span><span class="dot" data-idx="44" title="루나 소사이어티 &amp; 결론"></span><span class="dot" data-idx="45" title="루나 소사이어티 &amp; 결론"></span></div>
 <div id="deck">
-<section class="slide sl-title" data-idx="0" data-color="#5E6AD2" data-rgb="94,106,210">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
-      </div>
-      <h2 class="s-head">나를 정의한다
-브랜딩 문서작성</h2>
-      <p class="s-sub">모든 작업의 출발점. 클로드가 나처럼 사고하도록 &quot;브랜딩 문서&quot;부터 만든다.</p>
-      
-      <footer class="s-cap">오늘 이제 할 거 9가지였는데</footer>
-    </div>
-  </div>
-  <div class="s-counter">1<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="1" data-color="#5E6AD2" data-rgb="94,106,210">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
-      </div>
-      <h2 class="s-head">한 문장으로 나를 포지셔닝 한다</h2>
-      
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">&quot;[타겟]이 [문제]를 겪을 때, [경쟁]과 달리 [나만의 방법]으로 돕는 채널&quot;</li><li class="pt pt-first" style="">이 한 문장이 흐릿하면, 주제도 썸네일도 매번 흔들립니다. 포지셔닝은 &quot;나는 무엇을 하는 채널인가&quot;가 아니라, &quot;왜 하필 나를 봐야 하는가&quot;에 답하는 것입니다.</li><li class="pt pt-first" style="">클로드에게: &quot;brand.md로 이 공식에 맞춰 포지셔닝 문장 3개 후보 만들어줘.&quot;</li></ul>
-      <footer class="s-cap">나만의 방법으로 뭔가를 돕는다에 각자 이 4개를 채우면</footer>
-    </div>
-  </div>
-  <div class="s-counter">2<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="2" data-color="#5E6AD2" data-rgb="94,106,210">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
-      </div>
-      <h2 class="s-head">채널 정보를 통째로 넘긴다</h2>
-      
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#5E6AD2">[Claude Code Desktop 프롬프트]</li><li class="pt pt-first" style="">내 채널 정보 줄게. 이걸로 브랜딩 문서를 만들어줘.</li><li class="pt pt-first" style="">- 주제: [내 분야] / 구독자·평균 조회수</li><li class="pt pt-first" style="">- 잘된 영상 5개 / 안된 영상 5개 (제목·조회수)</li><li class="pt pt-first" style="">- 내가 자주 쓰는 말투, 댓글 반응</li><li class="pt pt-first" style="">정체성·USP·타겟·톤·금기로 정리해서 brand.md로 저장.</li><li class="pt pt-first" style="">✓ brand.md 생성 중... 5개 항목으로 구조화합니다.</li><li class="pt pt-first" style="">핵심 원칙: 역할 · 입력 · 규칙 · 출력 형식을 분리해서 지시한다.</li></ul>
-      <footer class="s-cap">내 채널 링크 주고 나서</footer>
-    </div>
-  </div>
-  <div class="s-counter">3<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="3" data-color="#5E6AD2" data-rgb="94,106,210">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
-      </div>
-      <h2 class="s-head">타이핑 X, 질문에 말로 답하기</h2>
-      
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#5E6AD2">[Claude Code Desktop 프롬프트]</li><li class="pt pt-first" style="">내 채널 브랜딩 문서를 만들 거야. 먼저 나를 인터뷰하는 질문지부터 만들어줘.</li><li class="pt pt-first" style="">- 정체성·USP·타겟·금기·실제 경험을 끌어내는 질문</li><li class="pt pt-first" style="">- 추상적 질문 X, &quot;구체적 일화&quot;를 끌어내는 톤으로</li><li class="pt pt-first" style="">- 쉬운 말로 15개, 한 번에 답할 수 있게</li><li class="pt pt-first" style="">✓ 질문지_브랜딩.md 생성 (15문항)</li><li class="pt pt-first" style="">질문지를 보며 그냥 말로 답을 녹음 → 녹음 파일을 전달 → &quot;이 녹음 전사해서 brand.md 만들어줘&quot;</li></ul>
-      <footer class="s-cap">내가 이걸 바탕으로 브랜드 문서를 할 건데</footer>
-    </div>
-  </div>
-  <div class="s-counter">4<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="4" data-color="#5E6AD2" data-rgb="94,106,210">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(94,106,210,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(94,106,210,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#5E6AD2;background:rgba(94,106,210,.12);border-color:rgba(94,106,210,.3)">TIP 1 · 브랜딩 문서</span>
-      </div>
-      <h2 class="s-head">브랜드 문서 = 8요소</h2>
-      
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#5E6AD2">근거 · FRAMEWORK BASIS: 도널드 밀러(Donald Miller · StoryBrand) — 베스트셀러 『스토리브랜드』저자. &quot;브랜드 명료화 문서(BrandScript)&quot; 원리를 크리에이터 채널용 8요소로 재구성.</li><li class="pt pt-first" style="">01 브랜드 코어 — 미션·왜 존재하나</li><li class="pt pt-first" style="">02 타겟 페르소나 — 누구의 어떤 문제</li><li class="pt pt-first" style="">03 포지셔닝 — 경쟁 속 내 자리</li><li class="pt pt-first" style="">04 콘텐츠 기둥 — 반복 주제 3~5축</li><li class="pt pt-first" style="">05 보이스 &amp; 톤 — 말투·예시·금지어</li><li class="pt pt-first" style="">06 비주얼 — 컬러·타이포·썸네일</li><li class="pt pt-first" style="">07 브랜드 키워드 — 형용사 3개</li><li class="pt pt-first" style="">08 USP · 금기 — 차별점 + No-list</li></ul>
-      <footer class="s-cap">나를 인터뷰해 달라라고 하시면 됩니다</footer>
-    </div>
-  </div>
-  <div class="s-counter">5<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="5" data-color="#3DD68C" data-rgb="61,214,140">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
-      </div>
-      <h2 class="s-head">&quot;이번 주 뭐 찍지?&quot;, 감으로 고른다</h2>
-      
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">[흔한 방식 X] 느낌·기분 / &quot;왠지 이게 될 것 같은데?&quot; / 결과: 왜 됐는지·왜 망했는지, 영원히 모름.</li><li class="pt pt-first" style="">[TIP 2] 내 채널, 성과 공식 / &quot;내 채널은 이런 영상이 평균 3배 터진다&quot; / 결과: 다음 기획의 근거가 생김.</li></ul>
-      <footer class="s-cap">이게 불가능하지만 하다 보면</footer>
-    </div>
-  </div>
-  <div class="s-counter">6<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="6" data-color="#3DD68C" data-rgb="61,214,140">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
-      </div>
-      <h2 class="s-head">잘된/안된 영상, 공식 추출</h2>
-      <p class="s-sub">21 · TIP 2 · 방법 ②</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#3DD68C">[Claude Code Desktop 프롬프트] 1위 영상과 평소보다 잘된 영상 패턴을 분석해서, 썸네일·제목·대본의 형태를 공식으로 정리해줘.</li><li class="pt pt-first" style="">공식: [구체적 문제] + [현장형 권위] + [숫자 결과]</li><li class="pt pt-first" style="">썸네일·제목·대본 공식 → formula.md 저장</li><li class="pt pt-first" style="">&quot;우리 채널은 이런 게 터진다&quot;가 글로 남는다.</li></ul>
-      <footer class="s-cap">근데 저는 안 된 거는 굳이 안 해요</footer>
-    </div>
-  </div>
-  <div class="s-counter">7<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="7" data-color="#3DD68C" data-rgb="61,214,140">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
-      </div>
-      <h2 class="s-head">내 1위 영상은 왜 터졌나</h2>
-      <p class="s-sub">22 · TIP 2 · 손에 넣는 것</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">썸네일: &quot;지금 당장 -10타!&quot; — 큰 글자 + 강조색 1~2단어</li><li class="pt pt-first" style="">제목: &quot;라운드 전 이것만 기억하면&quot; — 호기심 갭 + 구체 상황</li><li class="pt pt-first" style="">대본: 첫 8초 문제 직타격 — 결과 약속 → 전개</li><li class="pt pt-first" style="">이 잘되는 공식이 다음 모든 기획의 베이스라인이 됩니다.</li></ul>
-      <footer class="s-cap">엄청 디테일하게 나와요</footer>
-    </div>
-  </div>
-  <div class="s-counter">8<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="8" data-color="#3DD68C" data-rgb="61,214,140">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">TIP 2 · 리서치·성과분석</span>
-      </div>
-      <h2 class="s-head">잘된 공식, 수영 채널도 같다</h2>
-      <p class="s-sub">24 · TIP 2 · 잘된 영상 분석 ①</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">썸네일: &quot;초보자가 상급자 되는&quot; — 변신·되는 법 + 강조 색</li><li class="pt pt-first" style="">제목: &quot;수영선수가 알려주는 최단 루트&quot; — 내부자 권위 + 시간 즉효</li><li class="pt pt-first" style="">대본: 권위 제시 → 핵심 동작 — 따라하면 된다는 약속</li><li class="pt pt-first" style="">주제는 달라도 공식은 반복됩니다.</li></ul>
-      <footer class="s-cap">수영 채널도 뭐 이런 것들을 통해서 썸네일 어땠고</footer>
-    </div>
-  </div>
-  <div class="s-counter">9<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="9" data-color="#F59E0B" data-rgb="245,158,11">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
-      </div>
-      <h2 class="s-head">경쟁·레퍼런스 채널, 전수 추출</h2>
-      <p class="s-sub">27 · TIP 3 · 방법 ①</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code Desktop 프롬프트] 아래 채널들 최근 25편씩 전수 추출해서 다루는 주제·인기 소재를 리스트업 해줘. {링크1} {링크2} {링크3} ... {링크N}</li><li class="pt pt-first" style="">N채널 × 25편 분석 중 (백그라운드) — 다른 일 하셔도 됩니다.</li><li class="pt pt-first" style="">백그라운드로 동시 처리, 일하는 동안 다른 작업.</li></ul>
-      <footer class="s-cap">모아뒀던 채널 정리해 두신 게 있으면</footer>
-    </div>
-  </div>
-  <div class="s-counter">10<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="10" data-color="#F59E0B" data-rgb="245,158,11">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
-      </div>
-      <h2 class="s-head">&quot;평균 대비 배수&quot;만 추려라</h2>
-      <p class="s-sub">28 · TIP 3 · 방법 ②</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code Desktop 프롬프트] 여러 채널에서 반복되는 키워드와 카피라이팅 구조를 추려주고, 채널 평균 대비 조회수가 높은 영상을 리스트업 해줘.</li><li class="pt pt-first" style="">결과: 반복 키워드·카피 구조 12개 / 평균 대비 상위 28편</li><li class="pt pt-first" style="">우연이 아닌, 반복되는 카피 구조를 찾는다.</li></ul>
-      <footer class="s-cap">어떤 식으로 하는지가 나옵니다</footer>
-    </div>
-  </div>
-  <div class="s-counter">11<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="11" data-color="#F59E0B" data-rgb="245,158,11">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F59E0B;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)">TIP 3 · 경쟁·레퍼런스 분석</span>
-      </div>
-      <h2 class="s-head">내 채널 vs 경쟁, 빈 칸을 찾아라</h2>
-      
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F59E0B">[Claude Code 프롬프트] 경쟁 채널들이 다 다루는데 내 채널에서만 다루지 않은 내용을 알려주고, 내 브랜드에 맞게 기획안 만들어줘.</li><li class="pt pt-first" style="">[결과] ✓ 빈 칸(아무도 안 한 각도) 6개 = 선점 기회</li><li class="pt pt-first" style="">검증된 소재 + 빈 칸 = 안전하면서 차별적.</li></ul>
-      <footer class="s-cap">그리고 이런 것도 가끔 저는 쓰는데</footer>
-    </div>
-  </div>
-  <div class="s-counter">12<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-trans" data-idx="12" data-color="#EC4899" data-rgb="236,72,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
-      </div>
-      <h2 class="s-head">기획안 자동 작성</h2>
-      <p class="s-sub">브랜딩·성과·검증을 합쳐 4섹션 기획안을 한 번에 뽑는다.</p>
-      
-      <footer class="s-cap">그걸 가지고 우리가 기획안을 이제 작성을 하게 되겠죠</footer>
-    </div>
-  </div>
-  <div class="s-counter">13<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="13" data-color="#EC4899" data-rgb="236,72,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
-      </div>
-      <h2 class="s-head">기획안 전에 방향부터 확인</h2>
-      
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#EC4899">[Claude Code 프롬프트] brand.md, 성과공식, 검증패턴 셋 다 읽고 다음 영상 주제 후보 10개 → 3개로 추려줘. 기획안 쓰기 전에 3개 방향(제목 축)부터 먼저 보여줘. 확인하고 진행할게.</li><li class="pt pt-first" style="">[결과] ✓ 3개 방향: 1) [축] 2) [축] 3) [축]</li><li class="pt pt-first" style="">여기서 한 번 끊으면, 다 쓴 뒤 갈아엎기를 막습니다.</li></ul>
-      <footer class="s-cap">이제 조립이 안 된다라는 말씀을 드렸었고</footer>
-    </div>
-  </div>
-  <div class="s-counter">14<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="14" data-color="#EC4899" data-rgb="236,72,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
-      </div>
-      <h2 class="s-head">기획안, 4섹션 자동 작성</h2>
-      
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#EC4899">[Claude Code 프롬프트] 1번 방향으로 기획안 써줘. 썸네일·제목 후보 / 인트로 30초 대본 / 질문지 6개 / 검증 근거(레퍼런스·조회수)까지.</li><li class="pt pt-first" style="">[결과] ✓ 기획안_롱폼1.md 생성, 4섹션 + 검증 테이블</li><li class="pt pt-first" style="">&quot;OK&quot; 한마디면, 2·3·4번도 같은 방식으로.</li></ul>
-      <footer class="s-cap">그러니까 개발자가 이제 여기서부터 못 따라오는 영역이</footer>
-    </div>
-  </div>
-  <div class="s-counter">15<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="15" data-color="#EC4899" data-rgb="236,72,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(236,72,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(236,72,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#EC4899;background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.3)">TIP 4 · 기획안 작성</span>
-      </div>
-      <h2 class="s-head">그냥 vs 검증 기반</h2>
-      <p class="s-sub">36 · TIP 4 · 기획안의 차이</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#EC4899">[BEFORE] 3. 상세 기획, Top 4 (검증 6% 핵심)</li><li class="pt pt-first" style="">[BEFORE] 통플 1. 내 영상 10개 역산: 공통점 1가지 (메타 ★최우선)</li><li class="pt pt-first" style="">[BEFORE] 썸네일 예시: &#x27;내 영상 10개, 공통점 1개&#x27; / 서브: &#x27;감으로 찍는 시대는 끝났다&#x27;</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 1: 조회수 터진 내 영상 10개 역산했더니 공통점이 딱 1개</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 2: 감으로 찍는 시대는 끝났습니다 (제 채널 데이터 공개)</li><li class="pt pt-first" style="">[BEFORE] 제목 후보 3: 65만 채널 상위 10개 영상의 숨은 규칙 1가지</li><li class="pt pt-first" style="">[BEFORE] 인트로 훅 (0~30초): 감으로 찍는 시대는 끝났습니다. 오늘은 제 채널에서 조회수가 터진 영상 10개를 그대로 갖고, 그 안에서 공통점 하나를 뽑아 보여드릴게요.</li><li class="pt pt-first" style="">[BEFORE] 본문 구조: ① 통낮 제거 ② 데이터 공개 (조회·CTR·구독전환) ③ 공통점 1가지 추출 ④ 역산 체크리스트 (4문항) ⑤ 마무리</li><li class="pt pt-first" style="">[BEFORE] 마무리: &#x27;오늘 당장 본인 채널 조회수 상위 5개만 뽑아서, 이 1가지가 들어있는지만 보면 됩니다.&#x27; → 다음 영상: 스튜디오 지표 (통풀 2)</li><li class="pt pt-first" style="">[AFTER] 통풀 1: 유튜브 0에서 시작, 딱 이 8단계 순서대로만</li><li class="pt pt-first" style="">[AFTER] 1. 예상 썸네일 및 제목</li><li class="pt pt-first" style="">[AFTER] 썸네일 메인 카피: &#x27;유튜브 시작, 딱 8단계&#x27; / 서브 카피: &#x27;이유지 말고 이 순서대로&#x27;</li><li class="pt pt-first" style="">[AFTER] 제목 후보 1: 유튜브 해야 하는데 미루고만 있다면, 딱 이 8단계를 순서대로만 하세요</li><li class="pt pt-first" style="">[AFTER] 제목 후보 2: 3년간 65만을 만들면서 유튜브 시작 8단계 (감 없이 시작하는 법)</li><li class="pt pt-first" style="">[AFTER] 제목 후보 3: 유튜브 채널이 해야 할지 모르겠다면, 이 순서가 전부입니다</li><li class="pt pt-first" style="">[AFTER] 2. 인트로 대본 (30초짜): 유튜브, 직장인 3대 하면이라는 말이 있을 만큼 시작이 어렵게 느껴지죠. 그런데 사실은 어려운 게 아니라, 뭐부터 해야 할지 순서를 몰라서 미루는 겁니다.</li><li class="pt pt-first" style="">[AFTER] 저는 3년 동안 채널 4개, 65만을 만들면서 늘 똑같은 순서를 적용해 왔어요. 오늘은 그 시작 8단계를 하나도 빠짐없이, 그대로 따라 할 수 있게 풀어드릴게요.</li><li class="pt pt-first" style="">[AFTER] 3. 질문지 &amp; 예상 답변 방향</li><li class="pt pt-first" style="">[AFTER] Q1. 유튜브 시작이 왜 이렇게 어렵게 느껴질까요? → 질문 의도: 잠김·미루는 시청자 공감 (돈은 아니라 순서 문제) / 답변 골격: 순서가 아니라 뭐부터 해야 할지 감이 없어서 → 감으로 준비 3일 만에 포기 → 이 순서만 있으면 누구나 시작</li><li class="pt pt-first" style="">[AFTER] Q2. 첫 단계, 주제는 어떻게 정하나요? (통낮 빈칸) → 질문 의도: &#x27;새 아이디어나 블루오션 찾기&#x27;를 기원 반박 / 답변 골격: 블루오션 찾지 마라 → 수요 있는 레드오션에서 → 경쟁 값이 보여도 꾸준히 하는 사람을</li><li class="pt pt-first" style="">[AFTER] Q3. 레퍼런스 채널은 왜, 어떻게 찾나요? (★ 핵심) → 질문 의도: 레퍼런스 30개 구독으로 알고리즘 트레킹 학습 / 답변 골격: 레퍼런스 = 나침반 → 검색해서 상위권 좋은 채널 30개 구독</li><li class="pt pt-first" style="">[AFTER] Q4. 잘되는 채널에서 뭘 봐야 하나요? (공통점=공식) → 질문 의도: 공통점 분석·채널 구조 공통점 추출 / 답변 골격: 같은 얼마도 구조와 공통점 → 썸네일·문제 채크·키워드·대본 흐름 정리</li><li class="pt pt-first" style="">[AFTER] Q5. 그래서 영상은 어떤 순서로 만드나요? (썸네일 먼저) → 질문 의도: 제작 순서 - 썸네일 → 대본 → 촬영 / 답변 골격: 썸네일 먼저(영상 흐름 결정) → 썸네일 기반 대본 → 100% 대본 후 촬영</li><li class="pt pt-first" style="">[AFTER] Q6. (보조) 오늘 당장 1단계로 뭘 하면 도움이 될까요? → 답변 가이드: &#x27;오늘은 딱 1단계만, 내가 다를 레드오션 주제 하나 정하고, 잘되는 채널 5개만...&#x27;</li></ul>
-      <footer class="s-cap">그냥 쪽 해 가지고 기획안 만들어 줘 한 거고요 / 이제 좀 기획안이 좀 달라집니다 / 늘 똑같은 순서를 적용을 해 왔습니다</footer>
-    </div>
-  </div>
-  <div class="s-counter">16<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-trans" data-idx="16" data-color="#8B5CF6" data-rgb="139,92,246">
-  <!-- Ambient blobs -->
+<section class="slide title" data-idx="0" data-color="#8B5CF6" data-rgb="139,92,246">
   <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
   <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">TIP 5 · 대본</span>
+        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">INTRO</span>
       </div>
-      <h2 class="s-head">매번, 백지에서 대본을 쓴다</h2>
-      <p class="s-sub">38 · TIP 5 · 문제</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">[흔한 방식 — BEFORE] 매번 처음부터</li><li class="pt pt-first" style="">&#x27;오늘은 어떻게 시작하지...&#x27;, 톤도 구성도 들쭉날쭉</li><li class="pt pt-first" style="">결과: 잘된 영상의 흐름이 재현되지 않음.</li><li class="pt pt-first" style="">[TIP 5 — AFTER] 내, 대본 골격을 추출</li><li class="pt pt-first" style="">&#x27;내 잘된 영상들의 공통 구조&#x27;를 뽑아, 매번 그 위에서 쓴다</li><li class="pt pt-first" style="">결과: 시청 지속률이 구조로 안정된다.</li></ul>
-      <footer class="s-cap">거기에서 또 대본을 이어가실 분들도 많긴 하지만</footer>
-    </div>
-  </div>
-  <div class="s-counter">17<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-title" data-idx="17" data-color="#06B6D4" data-rgb="6,182,212">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
-      </div>
-      <h2 class="s-head">썸네일·제목
-카피</h2>
-      <p class="s-sub">상위 썸네일 170여 개에서 뽑은 18 구조로 클릭을 만든다.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">TIP 6 · COPY</li><li class="pt pt-first" style="">상위 썸네일 170여 개에서 뽑은 18 구조로 클릭을 만든다.</li></ul>
-      <footer class="s-cap">늘 이제 제일 어려워하는 게 썸네일 제목이에요</footer>
-    </div>
-  </div>
-  <div class="s-counter">18<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="18" data-color="#06B6D4" data-rgb="6,182,212">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
-      </div>
-      <h2 class="s-head">클릭 카피 = 5대 심리 카테고리</h2>
-      <p class="s-sub">43 · TIP 6 · 클릭 카피 5×18</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">A · 손실·공포: 금기 경고·후회 예방·기관 은폐</li><li class="pt pt-first" style="">B · 호기심·은폐: 지시대명사·질문/자문·무지 폭로</li><li class="pt pt-first" style="">C · 권위·증거: 내부자 폭로·수치/과학·직접 실험</li><li class="pt pt-first" style="">D · 효율·이득: 숫자 한정·시간 축효·조지가·논높이·시스템</li><li class="pt pt-first" style="">E · 욕망·정체성: 변신/되는법·특징/징조·단일 해결·대안 지시</li><li class="pt pt-first" style="">상위 썸네일 170여 개 분석 → 18구조로 압축. 빈칸만 내 주제로.</li></ul>
-      <footer class="s-cap">그 추출한 이 파일 양식을 제가 드릴게요</footer>
-    </div>
-  </div>
-  <div class="s-counter">19<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="19" data-color="#06B6D4" data-rgb="6,182,212">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
-      </div>
-      <h2 class="s-head">검증된 20가지 카피 구조</h2>
+      <h2 class="s-head">경계를 넘은 과학자들</h2>
+      <p class="s-sub">새로운 산업은 경계를 지운 자들이 만들었다</p>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">숫자 한정형 — &#x27;한국 ETF 3개로 평생 월급&#x27;</li><li class="pt pt-first" style="">지시대명사 은폐 — &#x27;핸드드립 이것 알고나니&#x27;</li><li class="pt pt-first" style="">내부자 폭로 — &#x27;7년차 시공자가 폭로하는 태양광 사기&#x27;</li><li class="pt pt-first" style="">Before→After — &#x27;151M → 198M 비거리&#x27;</li><li class="pt pt-first" style="">금기 경고 — &#x27;이것 켜두면 도청, 지금 꺼두세요&#x27;</li><li class="pt pt-first" style="">비밀 공개 — &#x27;사장님이 알리지 말라던 레시피&#x27;</li><li class="pt pt-first" style="">통념 부정 — &#x27;무작정 걷지 마세요&#x27;</li><li class="pt pt-first" style="">직접 검증 — &#x27;4년간 계란 매일 5개씩 먹었더니&#x27;</li><li class="pt pt-first" style="">의외성 반전 — &#x27;이이없네요 너무 쉽잖아&#x27;</li><li class="pt pt-first" style="">소수 특권 — &#x27;99%는 모르는 제미나이 기능&#x27;</li><li class="pt pt-first" style="">변신·되는 법 — &#x27;유리멘탈도 빼집니다&#x27;</li><li class="pt pt-first" style="">대안 지시 — &#x27;스케일링 말고 이거 하세요&#x27;</li><li class="pt pt-first" style="">시간 즉효 — &#x27;변기수압 3초 만에 해결&#x27;</li><li class="pt pt-first" style="">눈높이 보장 — &#x27;5살도 이해하는 ETF&#x27;</li><li class="pt pt-first" style="">질문·자문형 — &#x27;난 왜 이렇게 안 빠져?&#x27;</li><li class="pt pt-first" style="">기관 은폐 — &#x27;보험사는 절대 말 안합니다&#x27;</li><li class="pt pt-first" style="">특징·정조 — &#x27;그릇 큰 사람들의 특징 5가지&#x27;</li><li class="pt pt-first" style="">후회 예방 — &#x27;1억 날리고 후회하는 7가지&#x27;</li><li class="pt pt-first" style="">vs 대결 — &#x27;복리의 마법 vs 통장 0원&#x27;</li><li class="pt pt-first" style="">랭킹·TOP — &#x27;2026 런닝화 TOP4&#x27;</li><li class="pt pt-first" style="">하단 설명: 실제 상위 썸네일 1700여 개에서 추출. 빈칸 내 주제로.</li></ul>
-      <footer class="s-cap">이 파일을 공유를 드릴 거예요</footer>
-    </div>
-  </div>
-  <div class="s-counter">20<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="20" data-color="#06B6D4" data-rgb="6,182,212">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(6,182,212,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(6,182,212,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#06B6D4;background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3)">TIP 6 · 썸네일·제목</span>
-      </div>
-      <h2 class="s-head">문구 → 이미지까지 연결</h2>
-      <p class="s-sub">고른 문구를 이미지 생성·캔바로</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#06B6D4">확정된 썸네일 문구 + 컨셉(배경·인물 배치·색)을 클로드에게 정리시켜 이미지 생성 도구나 캔바 작업 지시서로 바로 넘깁니다.</li><li class="pt pt-first" style="">절대, 1개만 만들고 끝내지 않기. 30개 중 2개가 정석.</li></ul>
-      <footer class="s-cap">초안까지도 클로드 코드가 그러니까 쉽게 얘기하면</footer>
-    </div>
-  </div>
-  <div class="s-counter">21<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="21" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
-      </div>
-      <h2 class="s-head">후반작업에 시간을 다 쓴다</h2>
-      <p class="s-sub">무음 자르기 · 군더더기 제거 · 자막, 손으로</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">촬영보다 편집이 몇 배 더 걸립니다. 그런데 그 일의 대부분은 규칙이 명확한 반복 작업입니다. 규칙이 있으면, 자동화됩니다.</li><li class="pt pt-first" style="">자막·무음 컷, 클로드 + 무료 도구로 자동.</li></ul>
-      <footer class="s-cap">우리 뭐 무음 구간이라든지 말 더듬는 것들 있죠</footer>
-    </div>
-  </div>
-  <div class="s-counter">22<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="22" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
-      </div>
-      <h2 class="s-head">음성 → 자막 자동 생성</h2>
       
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">[Claude Code Desktop 프롬프트] {영상.mp4 경로}의 음성을 Whisper로 분석해서 자막 만들어줘.</li><li class="pt pt-first" style="">한 줄 25~35자로 작성하되, 단순 글자수가 아니라 맥락·내용 단위로 끊어서 만들어줘.</li><li class="pt pt-first" style="">결과: subtitle.srt 생성, 한 줄 25~35자 · 맥락 단위 컷</li><li class="pt pt-first" style="">편집 프로그램에 그대로 불러오면 끝</li><li class="pt pt-first" style="">받아쓰기, 0분. 무료 모델로.</li></ul>
-      <footer class="s-cap">그리고 실제 브루에서 돌리는 엔진이 위스퍼 엔진이거든요</footer>
+      <footer class="s-cap">언더스탠딩 강의 — 과학사·지식사로 읽는 혁신의 기원</footer>
     </div>
   </div>
-  <div class="s-counter">23<span class="s-total"> / 44</span></div>
+  <div class="s-counter">1<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-demo" data-idx="23" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide quote" data-idx="1" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">INTRO</span>
       </div>
-      <h2 class="s-head">음성 → 자막 자동 생성</h2>
+      <h2 class="s-head">잡스가 남긴 하나의 문장</h2>
       
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">[Claude Code Desktop 프롬프트] 이 자막 타임코드 보고, 무음 구간이랑 &#x27;어... 음...&#x27; 같은 군더더기 구간을 찾아서 잘라낼 구간 목록(타임코드)으로 정리해줘.</li><li class="pt pt-first" style="">✓ cut_list.txt, 잘라낼 구간 42곳</li><li class="pt pt-first" style="">편집 프로그램에서 그대로 컷</li><li class="pt pt-first" style="">규칙이 있는 일은 전부 자동화 후보입니다.</li></ul>
-      <footer class="s-cap">이 방식으로 이제 자막을</footer>
-    </div>
-  </div>
-  <div class="s-counter">24<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="24" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 첫편집·자막</span>
-      </div>
-      <h2 class="s-head">후반작업, 시간 단축</h2>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">2011년 iPad 출시 현장에서 애플의 정체성을 단 한 문장으로 정의</li>
+<li class="pt">이 발언 이후 한국에 &#x27;인문학 열풍&#x27; 폭발적 확산</li>
+<li class="pt">핵심 질문: 잡스가 말한 리버럴 아츠는 정말 인문학인가?</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"애플은 테크놀로지와 리버럴 아츠의 교차점에 있다"</p>
+          <cite class="s-quote-author">— 스티브 잡스, 2011 iPad 출시 키노트</cite>
+        </blockquote>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">컷편집+자막작업 (1편): 5~6시간 [빨간 긴 바]</li><li class="pt pt-first" style="">자동화 후 (1편): 30분 [파란 짧은 바]</li><li class="pt pt-first" style="">남은 시간은 기획·소통처럼 사람만 할 수 있는 일에.</li></ul>
-      <footer class="s-cap">자막만 검수하고 다는 데 진짜 다 여섯 시간 걸리거든요</footer>
     </div>
   </div>
-  <div class="s-counter">25<span class="s-total"> / 44</span></div>
+  <div class="s-counter">2<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-content" data-idx="25" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide content" data-idx="2" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">INTRO</span>
       </div>
-      <h2 class="s-head">후반작업, 시간 단축</h2>
+      <h2 class="s-head">리버럴 아츠의 진짜 정체</h2>
+      <p class="s-sub">인문학이 아닌 &#x27;자유 학과&#x27; — 7개 분야의 통합</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">중세 교양인의 필수 기초 과정 — &#x27;자유 학과(Liberal Arts)&#x27;가 정확한 번역</li>
+<li class="pt">3학(Trivium): 문법 · 수사학 · 논리학</li>
+<li class="pt">4과(Quadrivium): 산술 · 기하학 · 천문학 · 음악</li>
+<li class="pt">문과 + 이과 + 예체능이 통합된 르네상스형 인재상</li>
+<li class="pt">단순 인문학으로 번역하기엔 지나치게 빈약한 개념</li>
+</ul>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F97316">컷편집+자막작업 (1편): 5~6시간 (빨간 막대)</li><li class="pt pt-first" style="">자동화 후 (1편): 30분 (파란 막대)</li><li class="pt pt-first" style="">남은 시간은 기획·소통처럼 사람만 할 수 있는 일에.</li></ul>
-      <footer class="s-cap">그러니까 직문직설이 그렇게 막 두려움이 없고</footer>
+      <footer class="s-cap">리버럴 아츠를 &#x27;인문학&#x27;으로만 보면 기술과 예술의 융합이라는 핵심이 사라진다</footer>
     </div>
   </div>
-  <div class="s-counter">26<span class="s-total"> / 44</span></div>
+  <div class="s-counter">3<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-demo" data-idx="26" data-color="#F97316" data-rgb="249,115,22">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(249,115,22,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide content" data-idx="3" data-color="#8B5CF6" data-rgb="139,92,246">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(139,92,246,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(139,92,246,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F97316;background:rgba(249,115,22,.12);border-color:rgba(249,115,22,.3)">TIP 7 · 컷편집·자막</span>
+        <span class="s-tag" style="color:#8B5CF6;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3)">INTRO</span>
       </div>
-      <h2 class="s-head">자막, 다국어로 한 번에</h2>
+      <h2 class="s-head">라파엘로가 그린 지식의 지도</h2>
+      <p class="s-sub">바티칸 &#x27;아테네 학당&#x27; — 2000년을 하나의 화면에</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#8B5CF6">16세기 르네상스 화가 라파엘로, 그리스·로마 철학자·수학자를 한 폭에</li>
+<li class="pt">구석의 인물: 수학자이자 음악 이론가 피타고라스</li>
+<li class="pt">문자 아닌 그림으로 리버럴 아츠 전통을 기록한 시각적 선언</li>
+<li class="pt">과학·철학·예술이 분리 불가능했던 시대의 증거</li>
+</ul>
       
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#F97316">Claude Code Desktop 프롬프트: subtitle.srt를 영어·일본어로 번역해서 각각 .srt로 저장해줘. 타임코드 그대로.</li><li class="pt pt-first" style="">출력 결과: subtitle_en.srt · subtitle_ja.srt</li><li class="pt pt-first" style="">유튜브 스튜디오 → 자막 → 언어 추가에서, AI가 만든 다국어 자막을 그대로 입력하면 끝.</li><li class="pt pt-first" style="">YouTube Studio UI 우측 패널: 영어(미국) / 제목: I grew my YouTube channel really fast by doing this. / 설명: Channels with stalled view counts can be unlocked simply by fixing their YouTube thumbnails and titles.</li></ul>
-      <footer class="s-cap">각각 SRT로 저장해 달라라고 하면</footer>
+      <footer class="s-cap">라파엘로가 포착한 것: 지식은 원래 하나였다</footer>
     </div>
   </div>
-  <div class="s-counter">27<span class="s-total"> / 44</span></div>
+  <div class="s-counter">4<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-trans" data-idx="27" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide title" data-idx="4" data-color="#4A90E2" data-rgb="74,144,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,144,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,144,226,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
+        <span class="s-tag" style="color:#4A90E2;background:rgba(74,144,226,.12);border-color:rgba(74,144,226,.3)">피타고라스</span>
       </div>
-      <h2 class="s-head">쇼츠 + SEO</h2>
-      <p class="s-sub">롱폼 1편을 쇼츠 여러 개와 검색 노출로 확장한다.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">TIP 8 · GROW. (파란 배너)</li></ul>
-      <footer class="s-cap">그러고 나서 이제 여덟 번째가 아이디어죠</footer>
-    </div>
-  </div>
-  <div class="s-counter">28<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="28" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
-      </div>
-      <h2 class="s-head">롱폼, 1편으로 끝</h2>
+      <h2 class="s-head">수학이 음악을 만든 순간</h2>
+      <p class="s-sub">피타고라스가 숨겨놓은 도레미파솔라시도의 비밀</p>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">[흔한 방식 ✗] 업로드하고, 끝 — 한 편 만드는 데 며칠 → 노출은 한 번 / 결과: 들인 노력 대비, 도달이 적음.</li><li class="pt pt-first" style="">[TIP 8 ✓] 1편 → 쇼츠 5개 + SEO — 같은 대본에서 쇼츠·설명란·태그를 한 번에 / 결과: 한 번의 제작, 여러 번의 노출.</li></ul>
-      <footer class="s-cap">예전에는 도반처럼 해서 이게 이걸 계속 주입하고</footer>
-    </div>
-  </div>
-  <div class="s-counter">29<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="29" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
-      </div>
-      <h2 class="s-head">롱폼 대본 → 쇼츠 후보 분해</h2>
-      <p class="s-sub">S6 · TIP 8 · 방법 ① · 쇼츠</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 이 롱폼 대본에서 독립적으로 터질 만한 영상 길이에 맞게 쇼츠 구간 뽑아줘 (15분 기준 5개 이상). 각 첫 3초 훅, 세로 자막용 한 줄 카피, 추천 길이까지.</li><li class="pt pt-first" style="">✓ 쇼츠 5~7개, 타임코드 + 훅 + 세로 자막 카피</li><li class="pt pt-first" style="">한 번 찍어, 열 편 넘게 발행.</li></ul>
-      <footer class="s-cap">세로형 자막 있잖아요</footer>
-    </div>
-  </div>
-  <div class="s-counter">30<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="30" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
-      </div>
-      <h2 class="s-head">설명란·태그·챕터, 한 번에</h2>
-      <p class="s-sub">S7 · TIP 8 · 방법 ② · SEO</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 이 영상, 검색 잘 되게 설명란 작성해줘.</li><li class="pt pt-first" style="">- 첫 2줄에 핵심 키워드</li><li class="pt pt-first" style="">- 챕터 타임스탬프 (자막 기반)</li><li class="pt pt-first" style="">- 태그 5개 / 고정 댓글 1개</li><li class="pt pt-first" style="">✓ description.txt, 복붙만 하면 끝</li><li class="pt pt-first" style="">매번 귀찮아 미루던 일이 30초.</li></ul>
-      <footer class="s-cap">그러니까 영상을 하나 경로 집어넣고</footer>
-    </div>
-  </div>
-  <div class="s-counter">31<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="31" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
-      </div>
-      <h2 class="s-head">1편의 제작 → 여러 채널 노출</h2>
-      <p class="s-sub">같은 노력, 도달은 몇 배로.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#60A5FA">본편: 1편</li><li class="pt pt-first" style="">쇼츠: 10편+ · 추가 유입</li><li class="pt pt-first" style="">SEO: 설명·태그·챕터 · 검색 노출</li></ul>
-      <footer class="s-cap">이제 추가 유입을 만들자라고 하고</footer>
-    </div>
-  </div>
-  <div class="s-counter">32<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="32" data-color="#60A5FA" data-rgb="96,165,250">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(96,165,250,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(96,165,250,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#60A5FA;background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.3)">TIP 8 · 쇼츠·SEO</span>
-      </div>
-      <h2 class="s-head">쇼츠 5개, 발행 캘린더로 분산</h2>
-      <p class="s-sub">한 번 만든 콘텐츠가 2주 내내 유입을 만든다.</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#60A5FA">[Claude Code Desktop 프롬프트] 쇼츠 10여 개를 본편 발행 후 2~3주에 걸쳐 분산 발행하는 캘린더로 짜줘. 요일·시간까지.</li><li class="pt pt-first" style="">✓ 발행 캘린더, 본편 + 쇼츠 10여 개 일정</li></ul>
-      <footer class="s-cap">마찬가지로 업로드 해 둘 테니까 쓰실 수 있게</footer>
-    </div>
-  </div>
-  <div class="s-counter">33<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="33" data-color="#F43F5E" data-rgb="244,63,94">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(244,63,94,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(244,63,94,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#F43F5E;background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.3)">TIP 9 · 노션</span>
-      </div>
-      <h2 class="s-head">진행 상황, 한눈에</h2>
-      <p class="s-sub">한 영상 = 한 카드. 진행되면, 열 칸으로.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#F43F5E">아이디어(3): 시청자가 모르는 OO(롱폼), 검증 패턴 5가지(쇼츠)</li><li class="pt pt-first" style="">기획(2): 롱폼 1·&#x27;1년 전 저는&#x27;(검증 OK), 롱폼 2(검증 中)</li><li class="pt pt-first" style="">촬영·편집(2): 롱폼 3(자막 완료), 쇼츠 #14(첫 완료)</li><li class="pt pt-first" style="">발행(1): 롱폼 4·&#x27;이것만 바꾸면&#x27;(21,070회)</li></ul>
-      <footer class="s-cap">노션에 알아서 정리를 해준다 라는 거고요</footer>
-    </div>
-  </div>
-  <div class="s-counter">34<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="34" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">07 · 오해 정리</span>
-      </div>
-      <h2 class="s-head">하지 말아야 할 것</h2>
-      <p class="s-sub">딱 하나, 따라 하기만 하면 됩니다</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">SKIP 01 · 프롬프트 공부 — 한국말로 시키면 끝</li><li class="pt pt-first" style="">SKIP 02 · 비싼 AI 강의 — 만져보는 게 더 빠름</li><li class="pt pt-first" style="">SKIP 03 · 완벽한 양식 — 폴더 하나면 충분</li><li class="pt pt-first" style="">SKIP 04 · 도구 10개 구독 — 클로드 + 노션이면 90%</li></ul>
-      <footer class="s-cap">지금 뭐 슬림 보고 계실 텐데</footer>
-    </div>
-  </div>
-  <div class="s-counter">35<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="35" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">05 · 오늘 쓰는 도구</span>
-      </div>
-      <h2 class="s-head">오늘은 이 도구들을 활용합니다</h2>
-      <p class="s-sub">중심은 Claude. 나머지는 그 결과물을 받는 곳입니다.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">Claude — 기획·대본·분석·자동화</li><li class="pt pt-first" style="">YouTube — 채널·쇼츠·SEO</li><li class="pt pt-first" style="">Notion — 제작 파이프라인</li><li class="pt pt-first" style="">Whisper — 자막·다국어</li><li class="pt pt-first" style="">iOS — 일상 비서 연동</li></ul>
-      <footer class="s-cap">제가 광고도 당연히 아니고 필요할 것 같아서</footer>
-    </div>
-  </div>
-  <div class="s-counter">36<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="36" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)">06 · 오늘의 약속</span>
-      </div>
-      <h2 class="s-head">한 시간 뒤, 이 9가지를 손에 넣습니다</h2>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">TIP 1 · 채널 정보 → 브랜딩 문서 — 정체성·USP·금기를 한 문서로</li><li class="pt pt-first" style="">TIP 2 · 내 주제 리서치 + 성과분석 — 잘된 영상의 공식 도출</li><li class="pt pt-first" style="">TIP 3 · 경쟁·레퍼런스 채널 분석 — 평균 대비 배수 = 진짜 신호</li><li class="pt pt-first" style="">TIP 4 · 기획안 자동 작성 — 주제 검증 → 4섹션 기획안</li><li class="pt pt-first" style="">TIP 5 · 대본 골격 + 몰입형 대본 — 내 잘된 대본의 공통 골격</li><li class="pt pt-first" style="">TIP 6 · 썸네일·제목 대량 + 검증 — 30개 중 A/B 2조</li><li class="pt pt-first" style="">TIP 7 · 컷편집 + 다국어 자막 — 후반작업 시간 단축</li><li class="pt pt-first" style="">TIP 8 · 롱폼 → 쇼츠 + SEO — 노출 극대화</li><li class="pt pt-first" style="">TIP 9 · 노션 연동·파이프라인 자동화 — 흩어진 8가지를 하나의 시스템으로</li></ul>
-      <footer class="s-cap">그래서 첫 번째는 이제 오늘 할 거는</footer>
+      <footer class="s-cap">기원전 6세기 그리스 수학자 피타고라스는 현(줄)의 길이 비율이 음계를 결정한다는 사실을 최초로 발견했다.</footer>
     </div>
   </div>
-  <div class="s-counter">37<span class="s-total"> / 44</span></div>
+  <div class="s-counter">5<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-content" data-idx="37" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide content" data-idx="5" data-color="#4A90E2" data-rgb="74,144,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,144,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,144,226,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+        <span class="s-tag" style="color:#4A90E2;background:rgba(74,144,226,.12);border-color:rgba(74,144,226,.3)">피타고라스</span>
       </div>
-      <h2 class="s-head">[콘텐츠] 후보 찾는 법</h2>
+      <h2 class="s-head">라파엘로가 남긴 암호</h2>
+      <p class="s-sub">바티칸 아테네 학당에 새겨진 숫자 6·8·9·12</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A90E2">16세기 화가 라파엘로는 바티칸에 피타고라스를 음계 창시자로 묘사</li>
+<li class="pt">그림 속 피타고라스가 보는 석판에는 직각삼각형이 아닌 숫자들이 기록</li>
+<li class="pt">6, 8, 9, 12 — 겉으로는 단순한 숫자, 안에는 음악의 수학 구조</li>
+<li class="pt">이 숫자들의 비율이 서양 음계 전체를 결정하는 핵심 공식</li>
+</ul>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">슬라이드 텍스트 일부만 화면 좌측에 노출 — 전체 내용 미확인</li></ul>
-      <footer class="s-cap">뭐 그러면 CCTV를 켜 가지고</footer>
+      <footer class="s-cap">아테네 학당(1509~1511)은 2000년 전 지식을 한 화폭에 담은 리버럴 아츠의 상징이다.</footer>
     </div>
   </div>
-  <div class="s-counter">38<span class="s-total"> / 44</span></div>
+  <div class="s-counter">6<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-content" data-idx="38" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide content" data-idx="6" data-color="#4A90E2" data-rgb="74,144,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,144,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,144,226,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+        <span class="s-tag" style="color:#4A90E2;background:rgba(74,144,226,.12);border-color:rgba(74,144,226,.3)">피타고라스</span>
       </div>
-      <h2 class="s-head">[AI 덕분에 일이] 점 쉬워집니다. 문제를 정의하는 능력이 중요합니다</h2>
+      <h2 class="s-head">현의 비율이 곧 음정이다</h2>
+      <p class="s-sub">세 가지 핵심 비율로 완성된 음악의 수학</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A90E2">1:2 (6과 12) → 옥타브: 현 길이가 절반이면 정확히 한 옥타브 높아짐</li>
+<li class="pt">2:3 (6과 9, 또는 8과 12) → 완전5도: 도~솔 사이의 아름다운 화음</li>
+<li class="pt">3:4 (6과 8, 또는 9와 12) → 완전4도: 도~파 사이의 안정적인 음정</li>
+<li class="pt">중학교 음악 시간에 배우는 &#x27;완전음정 1·4·5·8도&#x27;가 바로 이 비율들</li>
+</ul>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#6B7280">화면 좌측에 파란 하이라이트 박스로 핵심 문장 강조 표시</li><li class="pt pt-first" style="">슬라이드 우측 및 상단은 화각 밖으로 잘려 내용 미확인</li></ul>
-      <footer class="s-cap">해결하는 법을 알아서 문제를 해결해 주는 것보다</footer>
+      <footer class="s-cap">기타 줄을 절반 지점에서 누르면 옥타브가 올라가는 이유가 바로 피타고라스의 1:2 법칙이다.</footer>
     </div>
   </div>
-  <div class="s-counter">39<span class="s-total"> / 44</span></div>
+  <div class="s-counter">7<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-demo" data-idx="39" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide content" data-idx="7" data-color="#4A90E2" data-rgb="74,144,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,144,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,144,226,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
+        <span class="s-tag" style="color:#4A90E2;background:rgba(74,144,226,.12);border-color:rgba(74,144,226,.3)">피타고라스</span>
       </div>
-      <h2 class="s-head">getdesign.md — 디자인 시스템 레퍼런스 사이트</h2>
-      <p class="s-sub">The first DESIGN.md collection in the ecosystem</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#6B7280">AI &amp; LLM Platforms, Developer Tools, Backend 등 75개 카테고리 디자인 분석</li><li class="pt pt-first" style="">BMW M, Dell, Nintendo, Airbnb, Apple, Binance, Ferrari 등 브랜드 수록</li><li class="pt pt-first" style="">각 브랜드의 디자인 시스템을 DESIGN.md 포맷 텍스트로 제공</li></ul>
-      <footer class="s-cap">실제로 이렇게 봤을 때 뭐 보면은</footer>
-    </div>
-  </div>
-  <div class="s-counter">40<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-demo" data-idx="40" data-color="#6B7280" data-rgb="107,114,128">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(107,114,128,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(107,114,128,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#6B7280;background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3)"></span>
-      </div>
-      <h2 class="s-head">getdesign.md/ferrari — DESIGN.md 코드 그대로 복사</h2>
-      <p class="s-sub">Design System Analysis: Ferrari — 전체 팔레트·타이포·spacing 규격 포함</p>
-      <ul class="pts"><li class="pt pt-first pt-mono" style="--pt-accent:#6B7280">colors: primary #da291c, canvas #181818, ink #ffffff 등 전체 팔레트 코드</li><li class="pt pt-first" style="">typography / spacing / semantic 색상 포함된 YAML 구조</li><li class="pt pt-first" style="">&#x27;Copied!&#x27; 버튼으로 클립보드 복사 → Claude 프롬프트에 바로 붙여넣기</li></ul>
-      <footer class="s-cap">이걸 그냥 복사하세요</footer>
-    </div>
-  </div>
-  <div class="s-counter">41<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="41" data-color="#34D399" data-rgb="52,211,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">보너스 · 일상 비서</span>
-      </div>
-      <h2 class="s-head">눈 뜨자마자, 음성 브리핑</h2>
-      <p class="s-sub">읽기 귀찮으면, 말로. 일정 수정도 말 한마디면 끝.</p>
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">① 일정·할 일 (SCHEDULE): 오늘 캘린더·미리알림 정리.</li><li class="pt pt-first" style="">② 주요 뉴스 3 (NEWS): 오늘의 핵심 뉴스 3가지.</li><li class="pt pt-first" style="">③ 안 읽은 알림 요약 (INBOX): 밤사이 온 중요 메일...</li></ul>
-      <footer class="s-cap">저는 첫 번째는 이제 일정하고 할 일 관리하는 거</footer>
-    </div>
-  </div>
-  <div class="s-counter">42<span class="s-total"> / 44</span></div>
-</section>
-<section class="slide sl-content" data-idx="42" data-color="#34D399" data-rgb="52,211,153">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(52,211,153,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(52,211,153,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
-  <div class="glass-card">
-    <div class="s-inner">
-      <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#34D399;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)">BONUS · 스킬, 3단계면 끝</span>
-      </div>
-      <h2 class="s-head">스킬 만들기, 딱 3단계</h2>
+      <h2 class="s-head">완전5도를 쌓아 음계를 만들다</h2>
+      <p class="s-sub">도→솔→레→라→미→시, 반복하면 도레미파솔라시도</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A90E2">도에서 완전5도(2:3) 위로 올라가면 → 솔</li>
+<li class="pt">솔에서 완전5도 위로 올라가면 → 레</li>
+<li class="pt">레→라 / 라→미 / 미→시 순서로 계속 쌓아가면</li>
+<li class="pt">이 음들을 한 옥타브 안에 정렬하면 도·레·미·파·솔·라·시·도 완성</li>
+<li class="pt">서양 음계 전체가 단 하나의 수학 규칙(2:3 반복)으로 설명된다</li>
+</ul>
       
-      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#34D399">STEP 1 — 충분히 대화한 뒤, 스킬 생성 (내 의도를 다 전달한 다음에)</li><li class="pt pt-first" style="">STEP 2 — 테스트 결과물 먼저 요청 (말투·디테일을 잡고 나서)</li><li class="pt pt-first" style="">STEP 3 — 결과물 피드백 → 반복 (마음에 들 때까지 수정)</li></ul>
-      <footer class="s-cap">이제 그다음부터는 그냥 아침에 오늘 일정 브리핑해줘</footer>
+      <footer class="s-cap">피타고라스 음계 이론은 중학교 음악 교과서의 첫 페이지에 지금도 실려 있다.</footer>
     </div>
   </div>
-  <div class="s-counter">43<span class="s-total"> / 44</span></div>
+  <div class="s-counter">8<span class="s-total"> / 46</span></div>
 </section>
-<section class="slide sl-trans" data-idx="43" data-color="#94A3B8" data-rgb="148,163,184">
-  <!-- Ambient blobs -->
-  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(148,163,184,.18) 0%,transparent 70%)"></div>
-  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(148,163,184,.08) 0%,transparent 65%)"></div>
-  <!-- Glass card -->
+<section class="slide quote" data-idx="8" data-color="#4A90E2" data-rgb="74,144,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,144,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,144,226,.08) 0%,transparent 65%)"></div>
   <div class="glass-card">
     <div class="s-inner">
       <div class="s-tag-wrap">
-        <span class="s-tag" style="color:#94A3B8;background:rgba(148,163,184,.12);border-color:rgba(148,163,184,.3)">클로징 · 앞으로</span>
+        <span class="s-tag" style="color:#4A90E2;background:rgba(74,144,226,.12);border-color:rgba(74,144,226,.3)">피타고라스</span>
       </div>
-      <h2 class="s-head">사실, 오늘 배운 9가지는 전부 한 가지 사고법이었습니다.</h2>
-      <p class="s-sub">클로징 · 앞으로 클로드를 어떻게 쓸 것인가</p>
+      <h2 class="s-head">수학과 음악은 하나였다</h2>
       
-      <footer class="s-cap">좋은 도움이 될 것 같아서 공유를 드리고요</footer>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A90E2">수학자 피타고라스가 음악 이론의 창시자로도 기억되는 이유</li>
+<li class="pt">리버럴 아츠(자유 7과): 문법·수사학·논리학 + 산술·기하학·천문학·음악</li>
+<li class="pt">문과와 이과, 예술을 하나로 묶는 것이 진정한 리버럴 아츠의 정신</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"16세기 화가 라파엘로는 자기보다 2천 년 전에 살았던 수학자 피타고라스를 서양 음계의 기본이 되는 도레미파솔라시도를 만든 사람으로 바티칸 그림에 기록했다."</p>
+          <cite class="s-quote-author">— 강의 자막, 언더스탠딩 채널</cite>
+        </blockquote>
+      
     </div>
   </div>
-  <div class="s-counter">44<span class="s-total"> / 44</span></div>
+  <div class="s-counter">9<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="9" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">혁명의 어원은 천구의 회전</h2>
+      <p class="s-sub">코페르니쿠스에서 데카르트까지, 근대 지식의 탄생</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">코페르니쿠스의 지동설이 &#x27;혁명(Revolution)&#x27;이라는 단어를 만들어냈다</li>
+<li class="pt">데카르트는 의학·철학·수학을 넘나들며 좌표계를 발명했다</li>
+<li class="pt">두 사람 모두 경계를 넘은 리버럴 아츠의 전형</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">10<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="10" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">Revolution, 천구에서 혁명으로</h2>
+      <p class="s-sub">코페르니쿠스 『천구의 회전에 관하여』(1543) — 어원의 탄생</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">라틴어 원제 De Revolutionibus Orbium Coelestium — &#x27;천구가 돈다&#x27;는 뜻</li>
+<li class="pt">Revolutionibus(회전) → 영어 Revolution — 원래는 과학 용어였다</li>
+<li class="pt">지동설 충격이 세계관을 뒤집으면서 &#x27;혁명&#x27;이 사회·정치 언어로 전용됨</li>
+<li class="pt">과학·정치·역사·문화·예술이 단 하나의 단어로 긴밀하게 연결된 사례</li>
+</ul>
+      
+      <footer class="s-cap">1543년 지동설 출판 → &#x27;혁명&#x27;이라는 개념 자체가 천문학에서 발원했다</footer>
+    </div>
+  </div>
+  <div class="s-counter">11<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="11" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">방법서설, 서문만 읽힌 책</h2>
+      <p class="s-sub">1637년 출판 — 병자호란과 같은 해, 한국은 지금도 413페이지를 모른다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">정확한 원제: &#x27;이성을 올바르게 이끄는 방법 및 굴절광학·기상학·기하학 서설&#x27;</li>
+<li class="pt">총 500페이지 구성: 서설(철학) 76페이지 + 과학·기하학 본문 413페이지</li>
+<li class="pt">한국에서는 서설 76페이지만 번역·유통, 뒤 413페이지는 단 한 번도 미번역</li>
+<li class="pt">1637년 출판 = 병자호란 → 조선과 유럽의 지식 격차가 이때부터 벌어졌다</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">12<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide quote" data-idx="12" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">방법적 회의 — 감각을 의심하라</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">인간의 눈에 맺힌 상은 상하·좌우가 실제와 반대로 뒤집혀 있다</li>
+<li class="pt">뇌는 이 도립상을 고의로 왜곡·보정하여 정상으로 인식하게 만든다</li>
+<li class="pt">인간이 감각을 통해 사물을 왜곡 없이 인식하는 방법은 근본적으로 없다</li>
+<li class="pt">따라서 모든 것을 의심(방법적 회의)한 뒤, 사유하는 나만이 확실한 존재</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"생각한다, 고로 존재한다"</p>
+          <cite class="s-quote-author">— 데카르트, 방법서설 (1637)</cite>
+        </blockquote>
+      
+    </div>
+  </div>
+  <div class="s-counter">13<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="13" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">x·y축, 데카르트가 만든 좌표</h2>
+      <p class="s-sub">자와 컴파스의 기하학 → 방정식의 기하학으로</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">이전 기하학: 자와 컴파스로만 도형을 작도·증명하던 방식</li>
+<li class="pt">데카르트 이후: x² + y² = r² — 방정식 하나로 원을 정의하는 해석기하학 탄생</li>
+<li class="pt">X축·Y축 직교좌표계 = 서양에서는 카테시안 코디네이트(Cartesian Coordinate)라 부름</li>
+<li class="pt">서양 초등학생은 &#x27;데카르트 좌표&#x27;로 배우지만 한국은 발명자 이름 없이 배운다</li>
+<li class="pt">레퍼런스 프레임(참조 기준점) 개념이 이때 처음 수학에 도입됨</li>
+</ul>
+      
+      <footer class="s-cap">수학 교과서의 x·y좌표는 데카르트의 발명 — 문과·이과 통합 지식의 산물</footer>
+    </div>
+  </div>
+  <div class="s-counter">14<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="14" data-color="#3DD68C" data-rgb="61,214,140">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(61,214,140,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(61,214,140,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#3DD68C;background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.3)">코페르니쿠스 + 데카르트</span>
+      </div>
+      <h2 class="s-head">의학→철학→수학, 경계 없는 천재</h2>
+      <p class="s-sub">데카르트가 보여준 리버럴 아츠의 실체</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#3DD68C">1st 전공: 의학 — 인간의 건강은 혈액이 올바르게 순환될 때 유지된다고 믿었음</li>
+<li class="pt">의학적 관찰이 인식론 질문을 낳았고 → 방법서설(철학)로 이어졌다</li>
+<li class="pt">철학적 방법론이 수학 언어를 요구했고 → 해석기하학(좌표계)으로 완결됐다</li>
+<li class="pt">문과·이과를 나누는 한국식 분류로는 데카르트를 단 한 칸에 넣을 수 없다</li>
+<li class="pt">코페르니쿠스·데카르트 = 과학이 정치·철학·수학과 연결되는 리버럴 아츠의 전형</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">15<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="15" data-color="#E2854A" data-rgb="226,133,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,133,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,133,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2854A;background:rgba(226,133,74,.12);border-color:rgba(226,133,74,.3)">케네</span>
+      </div>
+      <h2 class="s-head">의사에서 경제학자로 — 케네</h2>
+      <p class="s-sub">데카르트 의학 전통이 낳은 최초의 거시경제학</p>
+      
+      
+      <footer class="s-cap">경계를 넘은 과학자 시리즈 — 프랑수아 케네(François Quesnay)</footer>
+    </div>
+  </div>
+  <div class="s-counter">16<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="16" data-color="#E2854A" data-rgb="226,133,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,133,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,133,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2854A;background:rgba(226,133,74,.12);border-color:rgba(226,133,74,.3)">케네</span>
+      </div>
+      <h2 class="s-head">왕의 주치의가 경제를 해부하다</h2>
+      <p class="s-sub">부르봉 왕조 왕실 의사 프랑수아 케네</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2854A">케네: 18세기 프랑스 부르봉 왕조 전속 왕실 의사</li>
+<li class="pt">데카르트 철학 계승 — 건강 = 혈액이 원활히 순환되는 상태</li>
+<li class="pt">의학적 진단 방법론을 국가 경제 분석에 그대로 적용</li>
+<li class="pt">의사(醫師)의 시각으로 경제를 처음으로 과학적으로 해부</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">17<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="17" data-color="#E2854A" data-rgb="226,133,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,133,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,133,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2854A;background:rgba(226,133,74,.12);border-color:rgba(226,133,74,.3)">케네</span>
+      </div>
+      <h2 class="s-head">혈액 순환 = 경제 순환</h2>
+      <p class="s-sub">인체의 논리로 국가를 읽다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2854A">인체 건강의 조건: 혈액이 막힘 없이 전신 순환</li>
+<li class="pt">국가 경제의 조건: 재화가 막힘 없이 순환·소비되어야</li>
+<li class="pt">재화는 쌓는 것이 아니라 회전하고 소비될 때 가치가 생긴다</li>
+<li class="pt">원활한 경제 순환 = 건강한 국가, 막힌 경제 = 병든 국가</li>
+</ul>
+      
+      <footer class="s-cap">혈액순환론(Harvey, 1628)이 경제학에 적용된 역사적 순간</footer>
+    </div>
+  </div>
+  <div class="s-counter">18<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="18" data-color="#E2854A" data-rgb="226,133,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,133,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,133,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2854A;background:rgba(226,133,74,.12);border-color:rgba(226,133,74,.3)">케네</span>
+      </div>
+      <h2 class="s-head">경제표 — 최초의 거시경제 지도</h2>
+      <p class="s-sub">Tableau économique, 1758</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2854A">생산·소비·분배의 흐름을 하나의 표로 시각화한 최초의 시도</li>
+<li class="pt">경제를 농업(생산계층) → 지주 → 상공업자 3계층 순환으로 분석</li>
+<li class="pt">현대 국민소득 순환 모형(GDP 순환도)의 직접적 원형</li>
+<li class="pt">애덤 스미스도 &#x27;천재적 발상&#x27;이라 극찬한 역사상 첫 경제 모델</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">19<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="19" data-color="#E2854A" data-rgb="226,133,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,133,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,133,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2854A;background:rgba(226,133,74,.12);border-color:rgba(226,133,74,.3)">케네</span>
+      </div>
+      <h2 class="s-head">피지오크라시 — 오역된 혁명</h2>
+      <p class="s-sub">&#x27;중농주의&#x27;로 번역되며 왜곡된 자유방임의 원류</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2854A">Physiocracy = physis(자연·물리) + kratia(지배) → &#x27;자연의 지배&#x27;</li>
+<li class="pt">한국 번역 &#x27;중농주의&#x27; → &#x27;농자천하지대본&#x27; 연상 오해 유발</li>
+<li class="pt">핵심은 농업 우선이 아니라 자연법칙에 따른 자유로운 경제 흐름</li>
+<li class="pt">자유방임(Laissez-faire) 사상의 직접적 원류 — 국가 개입 반대</li>
+</ul>
+      
+      <footer class="s-cap">Physiocracy는 농업 예찬이 아니라 자연과학 방법론으로 경제를 해석한 혁명이었다</footer>
+    </div>
+  </div>
+  <div class="s-counter">20<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="20" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">과학이 곧 왕권이었다</h2>
+      <p class="s-sub">베르사이유 궁전 — 화려함 뒤에 숨겨진 과학 혁명</p>
+      
+      
+      <footer class="s-cap">베르사이유는 단순한 금빛 궁전이 아니다. 그 분수 하나가 당대 최첨단 과학의 결정체였다.</footer>
+    </div>
+  </div>
+  <div class="s-counter">21<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="21" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">루이 14세의 선택, 과학</h2>
+      <p class="s-sub">왕권 강화를 위해 종교 대신 과학을 선택하다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E24A6A">1660년대 루이 14세 등장 당시 종교 권위가 왕권보다 훨씬 강했음</li>
+<li class="pt">베르사이유 궁전의 금장 문양은 천체관측기구와 지구 — 과학의 상징</li>
+<li class="pt">왕은 &#x27;신의 대리인&#x27;이 아닌 &#x27;과학의 후원자&#x27;로 권위를 재정립</li>
+<li class="pt">프랑스 아카데미 설립으로 과학자들을 국가 권력 안으로 흡수</li>
+<li class="pt">과학 = 왕권의 도구이자 상징이라는 새로운 패러다임 수립</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">22<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="22" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">162m 분수의 비밀</h2>
+      <p class="s-sub">인류 역사상 전례 없던 물 끌어올리기 도전</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E24A6A">베르사이유 분수 높이 162m — 매일 3,200톤 물을 공급</li>
+<li class="pt">일반 펌프(작두펌프)로는 10m 이상 물을 올리는 것이 물리적으로 불가능</li>
+<li class="pt">해결책: 3단 펌프 설계 — 단계별 5기압씩 가압하여 파이프 파열 방지</li>
+<li class="pt">메디치 가문·토리첼리·갈릴레오의 대기압 발견이 기술적 토대 제공</li>
+<li class="pt">&#x27;이전까지 아무도 못 했던 것&#x27; — 과학이 국가 권력이 된 역사적 순간</li>
+</ul>
+      
+      <footer class="s-cap">토리첼리 실험으로 대기압 한계(10m)를 발견한 뒤, 3단 분할 가압 방식으로 한계를 돌파했다.</footer>
+    </div>
+  </div>
+  <div class="s-counter">23<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide quote" data-idx="23" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">과학이 국가의 권력이 되는 순간</h2>
+      
+      
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"이것은 이전까지 아무도 못했던 거예요. 과학이 국가의 권력으로 행사되는 순간입니다."</p>
+          <cite class="s-quote-author">— 민태기 박사 (언더스탠딩 강의)</cite>
+        </blockquote>
+      <footer class="s-cap">베르사이유 분수는 단순한 건축 장식이 아니라, 과학기술이 왕권의 상징이 될 수 있음을 세상에 증명한 선언이었다.</footer>
+    </div>
+  </div>
+  <div class="s-counter">24<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="24" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">커피하우스와 과학 폭발</h2>
+      <p class="s-sub">커피 전래 이후 합리적 토론이 서양 과학을 가속시키다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E24A6A">커피 전래 이전 서양의 지식 교류 공간은 &#x27;심포지엄(술자리)&#x27; — 방정식을 풀기 어려운 환경</li>
+<li class="pt">커피하우스 보급 → 각성 상태에서 합리적·논리적 토론 가능</li>
+<li class="pt">커피하우스에서 소더비·크리스티 경매소가 탄생</li>
+<li class="pt">세계 최초 학술 단체 &#x27;런던 왕립 아카데미&#x27;도 커피하우스 문화에서 발아</li>
+<li class="pt">서양 과학의 폭발적 성장과 커피 전래는 수없이 많은 논문이 인정한 상관관계</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">25<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="25" data-color="#E24A6A" data-rgb="226,74,106">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,74,106,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,74,106,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E24A6A;background:rgba(226,74,106,.12);border-color:rgba(226,74,106,.3)">베르사이유 궁전</span>
+      </div>
+      <h2 class="s-head">과학 = 새로운 권위의 언어</h2>
+      <p class="s-sub">베르사이유가 남긴 유산 — 지식이 권력이 되는 시대</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E24A6A">베르사이유 궁전 공식 문양에 &#x27;과학 기구&#x27;를 새긴 것은 역사적 선언</li>
+<li class="pt">루이 14세의 선택: 종교 대신 과학으로 왕권을 정당화</li>
+<li class="pt">3단 펌프 162m 분수 — &#x27;국가가 지원한 과학&#x27;의 첫 번째 위대한 성과</li>
+<li class="pt">프랑스 아카데미 설립 → 이후 계몽주의, 뉴턴 역학 전파의 토대</li>
+<li class="pt">오늘날 테크 기업이 과학·기술로 권위를 쌓는 방식의 원형이 여기에 있다</li>
+</ul>
+      
+      <footer class="s-cap">베르사이유에서 시작된 &#x27;과학=권력&#x27; 공식은 계몽주의를 거쳐 산업혁명, 그리고 현대 기술 패권 경쟁까지 이어진다.</footer>
+    </div>
+  </div>
+  <div class="s-counter">26<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="26" data-color="#A04AE2" data-rgb="160,74,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(160,74,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(160,74,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#A04AE2;background:rgba(160,74,226,.12);border-color:rgba(160,74,226,.3)">뉴턴</span>
+      </div>
+      <h2 class="s-head">천재의 침묵, 세상을 바꾸다</h2>
+      <p class="s-sub">아이작 뉴턴 — 물리학자에서 금융 혁신가까지</p>
+      
+      
+      <footer class="s-cap">런던 탑 조폐소에 뉴턴의 사진이 걸린 이유 — 과학과 경제를 넘나든 리버럴 아츠의 전형</footer>
+    </div>
+  </div>
+  <div class="s-counter">27<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="27" data-color="#A04AE2" data-rgb="160,74,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(160,74,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(160,74,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#A04AE2;background:rgba(160,74,226,.12);border-color:rgba(160,74,226,.3)">뉴턴</span>
+      </div>
+      <h2 class="s-head">20년 은거가 낳은 역작</h2>
+      <p class="s-sub">에드먼드 핼리의 방문과 프린키피아 출판 (1687)</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#A04AE2">20대에 중력 법칙 대부분 발견했으나 선배들과의 갈등으로 발표 거부</li>
+<li class="pt">케임브리지 은거 20년간 연금술 연구 — 후에 케인스가 이 논문들을 직접 구입</li>
+<li class="pt">핼리, 선배와의 커피하우스 논쟁 패배 후 뉴턴 방문 — &#x27;행성 타원 궤도 어떻게 증명하나?&#x27;</li>
+<li class="pt">뉴턴의 답: &#x27;그 문제는 20년 전에 풀었다&#x27; — 노트가 이미 완성 상태</li>
+<li class="pt">핼리가 사비로 출판 지원 → 1687년 프린키피아 탄생, 발표 당시 뉴턴 나이 45세</li>
+</ul>
+      
+      <footer class="s-cap">당시 영국인 평균 수명 30세 미만 — 인생의 황혼기에 생애 첫 책을 낸 뉴턴</footer>
+    </div>
+  </div>
+  <div class="s-counter">28<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="28" data-color="#A04AE2" data-rgb="160,74,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(160,74,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(160,74,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#A04AE2;background:rgba(160,74,226,.12);border-color:rgba(160,74,226,.3)">뉴턴</span>
+      </div>
+      <h2 class="s-head">조폐국장 뉴턴, 화폐를 혁신하다</h2>
+      <p class="s-sub">그레셤의 법칙 — 악화(惡貨)가 양화(良貨)를 구축한다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#A04AE2">영국의 위기: 은화 테두리 깎기(클리핑)로 10g 동전이 7g짜리로 유통</li>
+<li class="pt">그레셤의 법칙: 나쁜 돈이 좋은 돈을 시장에서 몰아내는 화폐 경제의 핵심 원리</li>
+<li class="pt">뉴턴의 해결책: 동전 테두리에 톱니(밀링)를 새겨 깎으면 즉시 식별되도록 설계</li>
+<li class="pt">명목 가치와 은 실제 가치의 일치 문제를 수학적 지식으로 불과 2~3년 만에 해결</li>
+<li class="pt">런던 탑 왕립 조폐소(Royal Mint)에 뉴턴 사진과 영국 금융혁명 자료 현재도 전시 중</li>
+</ul>
+      
+      <footer class="s-cap">과학자가 경제 문제를 수학으로 풀어낸 리버럴 아츠의 실전 사례</footer>
+    </div>
+  </div>
+  <div class="s-counter">29<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="29" data-color="#A04AE2" data-rgb="160,74,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(160,74,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(160,74,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#A04AE2;background:rgba(160,74,226,.12);border-color:rgba(160,74,226,.3)">뉴턴</span>
+      </div>
+      <h2 class="s-head">장례식 하나가 혁명을 낳다</h2>
+      <p class="s-sub">1727년 웨스트민스터 사원 — 볼테르의 충격과 계몽주의 탄생</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#A04AE2">1727년 뉴턴 장례식, 왕이 묻히는 웨스트민스터 사원에서 귀족들이 관을 운구</li>
+<li class="pt">프랑스 귀족에 맞서다 망명 중이던 볼테르가 이 장면을 우연히 목격</li>
+<li class="pt">충격 받은 볼테르: &#x27;과학자가 왕과 같은 예우를 받는 사회&#x27; — 영국과 프랑스의 차이를 실감</li>
+<li class="pt">귀국 후 볼테르가 콩도르세·달랑베르·디드로·루소에게 뉴턴 역학 전파</li>
+<li class="pt">이것이 우리가 아는 계몽주의의 탄생 — 과학이 사회 체제를 바꾼 순간</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">30<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide quote" data-idx="30" data-color="#A04AE2" data-rgb="160,74,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(160,74,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(160,74,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#A04AE2;background:rgba(160,74,226,.12);border-color:rgba(160,74,226,.3)">뉴턴</span>
+      </div>
+      <h2 class="s-head">뉴턴이 촉발한 지식의 연쇄 반응</h2>
+      <p class="s-sub">볼테르 → 계몽주의 → 칸트 → 헤겔로 이어진 혁명적 파급</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#A04AE2">칸트, 뉴턴 중력 법칙으로 태양계 탄생 설명 → &#x27;칸트-라플라스 성운설&#x27; 탄생</li>
+<li class="pt">헤겔의 박사 논문 주제: 행성 궤도 — 뉴턴 역학이 철학으로 확장</li>
+<li class="pt">뉴턴의 만유인력 → 볼테르 → 계몽주의 → 칸트 → 헤겔 → 근대 철학으로 연결</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"저 하늘에 빛나는 별과 내 가슴의 도덕 법칙"</p>
+          <cite class="s-quote-author">— 임마누엘 칸트 묘비명 — 뉴턴 물리학과 도덕철학의 통합</cite>
+        </blockquote>
+      <footer class="s-cap">과학 혁명 한 사람이 철학·경제·정치 혁명 전체를 촉발한 리버럴 아츠의 정수</footer>
+    </div>
+  </div>
+  <div class="s-counter">31<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="31" data-color="#4AE2D6" data-rgb="74,226,214">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,226,214,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,226,214,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4AE2D6;background:rgba(74,226,214,.12);border-color:rgba(74,226,214,.3)">살롱과 계몽주의</span>
+      </div>
+      <h2 class="s-head">살롱, 계몽주의를 낳다</h2>
+      <p class="s-sub">18세기 파리, 지식 혁명의 진원지</p>
+      
+      
+      <footer class="s-cap">커피하우스에서 배제된 여성들이 만든 살롱이 뉴턴의 과학을 유럽 전역에 전파하는 계몽주의의 진원지가 되다</footer>
+    </div>
+  </div>
+  <div class="s-counter">32<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="32" data-color="#4AE2D6" data-rgb="74,226,214">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,226,214,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,226,214,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4AE2D6;background:rgba(74,226,214,.12);border-color:rgba(74,226,214,.3)">살롱과 계몽주의</span>
+      </div>
+      <h2 class="s-head">두 개의 지식 공간</h2>
+      <p class="s-sub">성별이 갈라놓은 18세기 지적 담론의 장</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4AE2D6">커피하우스: 남성 전용 — 여성은 입장도, 커피 음용도 금지</li>
+<li class="pt">살롱: 여성이 만든 대안 — 귀족 부인이 주최, 명망가 초청</li>
+<li class="pt">살롱에서 철학·과학·문학 사상이 신분을 넘어 자유롭게 교류</li>
+<li class="pt">커피하우스가 남성 공론장이라면, 살롱은 여성 주도 지성의 장</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">33<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="33" data-color="#4AE2D6" data-rgb="74,226,214">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,226,214,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,226,214,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4AE2D6;background:rgba(74,226,214,.12);border-color:rgba(74,226,214,.3)">살롱과 계몽주의</span>
+      </div>
+      <h2 class="s-head">프린키피아를 프랑스어로</h2>
+      <p class="s-sub">샤틀레 부인 — 프랑스 최고의 여성 수학자</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4AE2D6">샤틀레 부인: 귀족 신분 + 프랑스 제일의 수학 실력, 컴퍼스를 든 초상화로 유명</li>
+<li class="pt">연인 볼테르와 함께 뉴턴의 프린키피아를 프랑스어로 번역</li>
+<li class="pt">번역에 그치지 않고 뉴턴 역학 해설서를 저술해 대중 보급</li>
+<li class="pt">책 표지 도해: 뉴턴의 빛 → 샤틀레 부인 거울 → 볼테르에게 반사 전달</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"계몽주의란 무지한 사람을 단순히 깨우치는 것이 아니라, 뉴턴의 역학을 전파하는 것이다"</p>
+          <cite class="s-quote-author">— 살롱 계몽주의의 핵심 명제</cite>
+        </blockquote>
+      
+    </div>
+  </div>
+  <div class="s-counter">34<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="34" data-color="#4AE2D6" data-rgb="74,226,214">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,226,214,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,226,214,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4AE2D6;background:rgba(74,226,214,.12);border-color:rgba(74,226,214,.3)">살롱과 계몽주의</span>
+      </div>
+      <h2 class="s-head">계몽주의 = 뉴턴의 빛</h2>
+      <p class="s-sub">Enlightenment — 빛을 비추다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4AE2D6">계몽주의(Enlightenment)의 어원: 빛을 비추다(light up) — 과학의 빛이 무지를 밝힘</li>
+<li class="pt">계몽의 내용 = 뉴턴 역학 그 자체 — 철학적 각성이 아니라 과학 지식의 전파</li>
+<li class="pt">살롱이 뉴턴의 과학혁명을 귀족·지식인 층에게 대중화하는 전파 채널</li>
+<li class="pt">프랑스 살롱 → 유럽 전역으로 계몽사상 확산, 프랑스 혁명의 사상적 기반 형성</li>
+</ul>
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">35<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="35" data-color="#4AE2D6" data-rgb="74,226,214">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,226,214,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,226,214,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4AE2D6;background:rgba(74,226,214,.12);border-color:rgba(74,226,214,.3)">살롱과 계몽주의</span>
+      </div>
+      <h2 class="s-head">거울 회사에서 반도체 소재까지</h2>
+      <p class="s-sub">생고뱅 — 17세기 살롱 후원 기업의 400년 변신</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4AE2D6">루이 14세 명령: 프랑스 업체가 거울 만들면 전량 구매 — 생고뱅 창립의 계기</li>
+<li class="pt">17세기 생고뱅이 베르사이유 거울의 방 357개 거울 제작, 살롱 문화 후원</li>
+<li class="pt">계몽주의 지식 확산과 산업 발전을 동시에 견인한 선구적 기업 모델</li>
+<li class="pt">현재: 종업원 18만명·연매출 70조원, 삼성전자 반도체 라인에 파이프라인 공급</li>
+<li class="pt">비유: 경복궁 창호지 납품사가 집현전 후원 후 삼성전자가 된 것과 같은 수준의 변신</li>
+</ul>
+      
+      <footer class="s-cap">17세기 거울 제조업체가 21세기 첨단 반도체 소재 기업으로 — 기업 장수의 비결은 시대마다 핵심 기술로의 변신</footer>
+    </div>
+  </div>
+  <div class="s-counter">36<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="36" data-color="#E2C94A" data-rgb="226,201,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,201,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,201,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2C94A;background:rgba(226,201,74,.12);border-color:rgba(226,201,74,.3)">1776년</span>
+      </div>
+      <h2 class="s-head">1776년, 세계를 바꾼 세 사건</h2>
+      <p class="s-sub">국부론 · 증기기관 · 독립선언서 — 우연이 아닌 필연</p>
+      
+      
+      <footer class="s-cap">같은 해, 같은 인물들의 네트워크 속에서 경제·산업·정치 혁명이 동시에 탄생했다</footer>
+    </div>
+  </div>
+  <div class="s-counter">37<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="37" data-color="#E2C94A" data-rgb="226,201,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,201,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,201,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2C94A;background:rgba(226,201,74,.12);border-color:rgba(226,201,74,.3)">1776년</span>
+      </div>
+      <h2 class="s-head">같은 해, 세 가지 혁명</h2>
+      <p class="s-sub">1776년에 일어난 놀라운 동시성</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2C94A">애덤 스미스 — 국부론(The Wealth of Nations) 출판: 자유시장 경제학의 탄생</li>
+<li class="pt">제임스 와트 — 개량 증기기관 완성: 산업혁명의 동력 장치 실현</li>
+<li class="pt">벤자민 프랭클린 — 미국 독립선언서 발표: &#x27;모든 인간은 평등하게 태어났다&#x27;</li>
+</ul>
+      
+      <footer class="s-cap">세 사건은 독립적으로 보이지만, 그 배후에는 하나의 인적 네트워크가 있었다</footer>
+    </div>
+  </div>
+  <div class="s-counter">38<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="38" data-color="#E2C94A" data-rgb="226,201,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,201,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,201,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2C94A;background:rgba(226,201,74,.12);border-color:rgba(226,201,74,.3)">1776년</span>
+      </div>
+      <h2 class="s-head">글래스고에서 파리까지: 연결의 지도</h2>
+      <p class="s-sub">한 대학, 한 여행, 한 만남이 역사를 바꿨다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2C94A">글래스고 대학 도덕철학 교수 애덤 스미스 — 장사 못하는 기계공 제임스 와트를 대학 실험실로 초빙</li>
+<li class="pt">조지프 블랙 교수가 &#x27;잠열(latent heat)&#x27; 개념으로 와트의 이론적 문제를 해결</li>
+<li class="pt">영국 재무장관 타운젠드가 아들의 그랜드 투어(Grand Tour) 가정교사로 애덤 스미스를 선택</li>
+<li class="pt">파리에서 케네(중농주의·자유방임)·벤자민 프랭클린과의 3자 만남 성사</li>
+<li class="pt">케네의 &#x27;레세페르(laissez-faire)&#x27; 사상 → 애덤 스미스, 귀국 후 10년 집필 → 국부론 탄생</li>
+</ul>
+      
+      <footer class="s-cap">프랭클린은 이 자리에서 계몽주의를 체득하고 돌아가 독립선언서를 집필했다</footer>
+    </div>
+  </div>
+  <div class="s-counter">39<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide quote" data-idx="39" data-color="#E2C94A" data-rgb="226,201,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,201,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,201,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2C94A;background:rgba(226,201,74,.12);border-color:rgba(226,201,74,.3)">1776년</span>
+      </div>
+      <h2 class="s-head">독립선언서 첫 문장의 출처</h2>
+      
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2C94A">이 문장은 케네·애덤 스미스와의 파리 토론에서 얻은 계몽주의 사상의 결정체</li>
+<li class="pt">정치 혁명(독립선언서) · 경제 혁명(국부론) · 산업 혁명(증기기관)이 같은 뿌리에서 동시 분출</li>
+</ul>
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"모든 인간은 평등하게 태어났다"</p>
+          <cite class="s-quote-author">— 벤자민 프랭클린, 미국 독립선언서 (1776) — 파리 계몽주의 살롱의 산물</cite>
+        </blockquote>
+      
+    </div>
+  </div>
+  <div class="s-counter">40<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="40" data-color="#E2C94A" data-rgb="226,201,74">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(226,201,74,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(226,201,74,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#E2C94A;background:rgba(226,201,74,.12);border-color:rgba(226,201,74,.3)">1776년</span>
+      </div>
+      <h2 class="s-head">루나 소사이어티: 혁신의 네트워크</h2>
+      <p class="s-sub">경계를 넘는 사람들의 모임이 산업혁명을 완성했다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#E2C94A">과학자 프리슬리 — 의사 이래즈머스 다윈 — 도자기업자 웨지우드 — 와트로 이어진 우정의 연쇄</li>
+<li class="pt">와트가 &#x27;특허는 냈지만 제조가 불가능하다&#x27;고 토로 → 프리슬리가 처가 철공소를 소개</li>
+<li class="pt">드디어 증기기관 완성 → 클라우지우스·클라페롱 등이 이론화 → 19세기 산업혁명으로 폭발</li>
+<li class="pt">음악가 윌리엄 허셜도 이 모임에서 망원경을 배워 천왕성을 발견 — 경계 초월의 전형</li>
+<li class="pt">라울 디피의 벽화(가로 60m·세로 10m)가 108명의 과학자와 함께 이 장면을 기록</li>
+</ul>
+      
+      <footer class="s-cap">경계를 넘는 사람들의 모임은 새로운 문화를 계속 만들어낸다 — 1776년의 교훈</footer>
+    </div>
+  </div>
+  <div class="s-counter">41<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide title" data-idx="41" data-color="#4A6AE2" data-rgb="74,106,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,106,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,106,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4A6AE2;background:rgba(74,106,226,.12);border-color:rgba(74,106,226,.3)">루나 소사이어티 &amp; 결론</span>
+      </div>
+      <h2 class="s-head">경계를 넘는 자들의 모임</h2>
+      <p class="s-sub">월광 아래 모인 천재들이 산업혁명을 만들다</p>
+      
+      
+      
+    </div>
+  </div>
+  <div class="s-counter">42<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="42" data-color="#4A6AE2" data-rgb="74,106,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,106,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,106,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4A6AE2;background:rgba(74,106,226,.12);border-color:rgba(74,106,226,.3)">루나 소사이어티 &amp; 결론</span>
+      </div>
+      <h2 class="s-head">음악가가 천왕성을 발견한 이유</h2>
+      <p class="s-sub">경계를 지우면 우주가 열린다</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A6AE2">윌리엄 허셜: 독일 출신 음악가·오르가니스트 → 독학으로 천문학 전환, 망원경 직접 제작</li>
+<li class="pt">교과서에는 &#x27;천왕성 발견자&#x27;만 기록 — 음악가 경력은 단 한 줄도 언급되지 않음</li>
+<li class="pt">1781년 자작 망원경으로 천왕성 발견 — 망원경으로 관측된 역사상 최초의 행성</li>
+<li class="pt">18세기 영국 전역에서 경계를 넘는 사람들의 지식 모임이 폭발적으로 형성됨</li>
+</ul>
+      
+      <footer class="s-cap">음악가·과학자·철학자의 경계가 없던 시대, 전혀 다른 발견이 탄생했다</footer>
+    </div>
+  </div>
+  <div class="s-counter">43<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="43" data-color="#4A6AE2" data-rgb="74,106,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,106,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,106,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4A6AE2;background:rgba(74,106,226,.12);border-color:rgba(74,106,226,.3)">루나 소사이어티 &amp; 결론</span>
+      </div>
+      <h2 class="s-head">루나 소사이어티: 월광 모임의 탄생</h2>
+      <p class="s-sub">매달 보름달 밤 버밍엄에 모인 경계 파괴자들</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A6AE2">조지프 프리스틀리(화학자·산소 발견), 이래즈머스 다윈(의사·진화론 선구자), 조사이아 웨지우드(도예 기업가), 제임스 와트(증기기관 완성자)</li>
+<li class="pt">달빛으로 귀가 가능한 보름달 밤에만 모임 개최 → &#x27;Lunar(월광) Society&#x27; 이름의 기원</li>
+<li class="pt">제임스 와트, 이 모임의 지적 교류 속에서 증기기관을 완성해 영국 산업혁명을 촉발</li>
+<li class="pt">과학·공학·철학·예술·사업 경계를 넘나드는 충돌이 새로운 산업을 탄생시킴</li>
+</ul>
+      
+      <footer class="s-cap">경쟁이 아닌 교류, 전문화가 아닌 융합이 산업혁명의 진짜 엔진이었다</footer>
+    </div>
+  </div>
+  <div class="s-counter">44<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide content" data-idx="44" data-color="#4A6AE2" data-rgb="74,106,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,106,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,106,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4A6AE2;background:rgba(74,106,226,.12);border-color:rgba(74,106,226,.3)">루나 소사이어티 &amp; 결론</span>
+      </div>
+      <h2 class="s-head">108명의 경계 파괴자 — 라울 디피 벽화</h2>
+      <p class="s-sub">1937년 파리 만국박람회, 가로 60m × 세로 10m 대작 &#x27;전기 요정(La Fée Électricité)&#x27;</p>
+      <ul class="pts"><li class="pt pt-first" style="--pt-accent:#4A6AE2">라울 디피: 아리스토텔레스~현대까지 108명의 과학자·발명가를 한 화폭에 기록 — 융합 지식의 시각적 기념비</li>
+<li class="pt">마이클 패러데이: &#x27;양초 한 자루&#x27; 크리스마스 강연으로 연소·광화·열전달 전부 설명 → 찰스 디킨스 감동해 &#x27;크리스마스 캐럴&#x27; 탄생</li>
+<li class="pt">새뮤얼 모스: 미국 국립미술관급 화가 → 아내 부음 늦게 전달받은 비극 → 전신기(모스 부호) 발명</li>
+<li class="pt">제임스 다이슨: 디자인 스쿨 출신 → 유체역학 원리를 역이용해 진공청소기·에어랩으로 세계 시장 석권</li>
+</ul>
+      
+      <footer class="s-cap">경계를 넘은 순간 — 화가가 통신을 발명하고, 디자이너가 공학을 혁신했다</footer>
+    </div>
+  </div>
+  <div class="s-counter">45<span class="s-total"> / 46</span></div>
+</section>
+<section class="slide quote" data-idx="45" data-color="#4A6AE2" data-rgb="74,106,226">
+  <div class="blob blob-a" style="background:radial-gradient(circle,rgba(74,106,226,.18) 0%,transparent 70%)"></div>
+  <div class="blob blob-b" style="background:radial-gradient(circle,rgba(74,106,226,.08) 0%,transparent 65%)"></div>
+  <div class="glass-card">
+    <div class="s-inner">
+      <div class="s-tag-wrap">
+        <span class="s-tag" style="color:#4A6AE2;background:rgba(74,106,226,.12);border-color:rgba(74,106,226,.3)">루나 소사이어티 &amp; 결론</span>
+      </div>
+      <h2 class="s-head">엔지니어(Engineer)의 본래 의미</h2>
+      
+      
+      <blockquote class="s-quote">
+          <p class="s-quote-text">"경계를 넘지 않으면, 내 분야만 한다면 결코 새로운 걸 만들 수가 없고, 새로운 걸 창조할 수 없으면 새로운 문화와 새로운 산업을 만들 수는 없습니다."</p>
+          <cite class="s-quote-author">— 언더스탠딩 강연 결론</cite>
+        </blockquote>
+      <footer class="s-cap">Engineer의 어원 라틴어 &#x27;ingenium&#x27; = 새롭고 신기한 것을 만드는 자. 경계를 넘는 자가 새로운 산업을 창조한다.</footer>
+    </div>
+  </div>
+  <div class="s-counter">46<span class="s-total"> / 46</span></div>
 </section>
 </div>
 <div id="nav">
-  <button class="nav-btn" id="btn-prev" aria-label="이전 슬라이드">&#8592;</button>
-  <button class="nav-btn" id="btn-next" aria-label="다음 슬라이드">&#8594;</button>
+  <button class="nav-btn" id="prev">&#8592;</button>
+  <button class="nav-btn" id="next">&#8594;</button>
 </div>
 <div id="hint">
-  <span class="kbd">←</span>
-  <span class="kbd">→</span>
-  <span style="color:rgba(255,255,255,.15);padding:0 2px">·</span>
-  <span class="kbd">Space</span>
+  <span class="kbd">←</span><span class="kbd">→</span><span style="font-size:10px;color:var(--fg-muted);margin-left:3px">navigate</span>
 </div>
 <script>
-const LABELS  = ["TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 1 · 브랜딩 문서", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 2 · 리서치·성과분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 3 · 경쟁·레퍼런스 분석", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 4 · 기획안 작성", "TIP 5 · 대본", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 6 · 썸네일·제목", "TIP 7 · 첫편집·자막", "TIP 7 · 첫편집·자막", "TIP 7 · 컷편집·자막", "TIP 7 · 첫편집·자막", "TIP 7 · 컷편집·자막", "TIP 7 · 컷편집·자막", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 8 · 쇼츠·SEO", "TIP 9 · 노션", "07 · 오해 정리", "05 · 오늘 쓰는 도구", "06 · 오늘의 약속", "", "", "", "", "보너스 · 일상 비서", "BONUS · 스킬, 3단계면 끝", "클로징 · 앞으로"];
-const COLORS  = ["#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#5E6AD2", "#3DD68C", "#3DD68C", "#3DD68C", "#3DD68C", "#F59E0B", "#F59E0B", "#F59E0B", "#EC4899", "#EC4899", "#EC4899", "#EC4899", "#8B5CF6", "#06B6D4", "#06B6D4", "#06B6D4", "#06B6D4", "#F97316", "#F97316", "#F97316", "#F97316", "#F97316", "#F97316", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#60A5FA", "#F43F5E", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#6B7280", "#34D399", "#34D399", "#94A3B8"];
-const slides  = Array.from(document.querySelectorAll('.slide'));
-const dotsEl  = document.getElementById('dots');
-const pbar    = document.getElementById('pbar');
-let cur = 0;
-let transitioning = false;
+const slides=document.querySelectorAll('.slide');
+const dots=document.querySelectorAll('.dot');
+const pbar=document.getElementById('pbar');
+const total=46;
+let cur=0,animating=false;
 
-// ── Dots ──────────────────────────────────────────
-slides.forEach((_,i)=>{
-  const d = document.createElement('div');
-  d.className='dot';
-  d.title = LABELS[i] || '';
-  d.onclick = ()=> go(i);
-  dotsEl.appendChild(d);
-});
-const dotEls = Array.from(document.querySelectorAll('.dot'));
-
-function applyColor(color){
-  pbar.style.background = color;
-  pbar.style.color      = color;   // for ::after glow
-  dotEls.forEach((d,i)=>{
-    d.style.background = i===cur ? color : '';
-  });
-}
+function getColor(){return slides[cur].dataset.color||'#4A90E2';}
 
 function go(n){
-  if(transitioning) return;
-  n = Math.max(0, Math.min(n, slides.length-1));
-  if(n===cur) return;
-  transitioning = true;
-
-  const prev = cur;
-  slides[prev].classList.remove('active');
-  slides[prev].classList.add('exit');
-  setTimeout(()=>slides[prev].classList.remove('exit'), 450);
-
-  cur = n;
+  if(animating||n===cur||n<0||n>=total)return;
+  animating=true;
+  const dir=n>cur?1:-1;
+  slides[cur].classList.add('exit');
+  slides[cur].classList.remove('active');
+  dots[cur].classList.remove('active');
+  cur=n;
+  slides[cur].style.transform=`translateX(${dir*32}px) scale(.985)`;
+  slides[cur].style.opacity='0';
   slides[cur].classList.add('active');
-
-  pbar.style.width = ((cur+1)/slides.length*100)+'%';
-  applyColor(COLORS[cur]);
-  dotEls.forEach((d,i)=>d.classList.toggle('active',i===cur));
-  dotEls[cur]?.scrollIntoView({block:'nearest',inline:'center'});
-
-  setTimeout(()=>{ transitioning=false; }, 450);
+  dots[cur].classList.add('active');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      slides[cur].style.transform='';
+      slides[cur].style.opacity='';
+    });
+  });
+  const pct=((cur+1)/total*100).toFixed(1);
+  pbar.style.width=pct+'%';
+  pbar.style.background=getColor();
+  pbar.style.color=getColor();
+  setTimeout(()=>{
+    document.querySelectorAll('.slide.exit').forEach(s=>s.classList.remove('exit'));
+    animating=false;
+  },420);
 }
 
-// ── Init ──────────────────────────────────────────
-slides[0].classList.add('active');
-pbar.style.width = (1/slides.length*100)+'%';
-dotEls[0]?.classList.add('active');
-applyColor(COLORS[0]);
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+dots.forEach((d,i)=>d.addEventListener('click',()=>go(i)));
 
-// ── Controls ──────────────────────────────────────
-document.getElementById('btn-prev').onclick = ()=>go(cur-1);
-document.getElementById('btn-next').onclick = ()=>go(cur+1);
-
-document.addEventListener('keydown', e=>{
-  if(['ArrowRight',' ','Enter'].includes(e.key)){ e.preventDefault(); go(cur+1); }
-  if(e.key==='ArrowLeft'){ e.preventDefault(); go(cur-1); }
-  if(e.key==='Home') go(0);
-  if(e.key==='End')  go(slides.length-1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')go(cur+1);
+  else if(e.key==='ArrowLeft')go(cur-1);
+  else if(e.key==='Home')go(0);
+  else if(e.key==='End')go(total-1);
 });
 
-// ── Swipe ─────────────────────────────────────────
-let sx=0, sy=0;
-document.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
 document.addEventListener('touchend',e=>{
-  const dx=sx-e.changedTouches[0].clientX;
-  const dy=Math.abs(sy-e.changedTouches[0].clientY);
-  if(Math.abs(dx)>44 && dy<40) go(dx>0?cur+1:cur-1);
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>40)go(dx<0?cur+1:cur-1);
 });
+
+// init
+pbar.style.width=((1/total)*100).toFixed(1)+'%';
+pbar.style.background=getColor();
+pbar.style.color=getColor();
 </script>
 </body>
 </html>
